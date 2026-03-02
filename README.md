@@ -68,7 +68,7 @@ Configuard is a self-hosted web application for centralized management of networ
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-org/configuard.git
+git clone https://github.com/thiagoe/configuard.git
 cd configuard
 
 # 2. Start everything
@@ -396,7 +396,7 @@ O Configuard é uma aplicação web auto-hospedada para gerenciamento centraliza
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/your-org/configuard.git
+git clone https://github.com/thiagoe/configuard.git
 cd configuard
 
 # 2. Suba tudo
