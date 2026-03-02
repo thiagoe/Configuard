@@ -340,8 +340,6 @@ O Configuard é uma aplicação web auto-hospedada para gerenciamento centraliza
 - [Recursos](#recursos)
 - [Requisitos](#requisitos)
 - [Início rápido](#início-rápido)
-  - [Docker (recomendado)](#docker-recomendado)
-  - [Desenvolvimento local](#desenvolvimento-local)
 - [Configuração](#configuração)
 - [Papéis de usuário](#papéis-de-usuário)
 - [Templates de backup](#templates-de-backup)
@@ -432,40 +430,6 @@ Rebuild após mudanças no código:
 ```
 
 > O container do backend roda `uvicorn --reload`, então mudanças no código Python são detectadas automaticamente sem reiniciar. Use `reload.sh backend` apenas ao adicionar/remover dependências Python.
-
----
-
-#### Desenvolvimento local
-
-Útil quando você quer hot-reload ao vivo no frontend e backend sem rebuild das imagens Docker.
-
-```bash
-# 1. Sobe só o banco de dados
-docker compose up -d postgresql
-
-# 2. Backend (novo terminal)
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env        # edite DB_HOST=localhost e os segredos
-uvicorn main:app --reload --port 8000
-
-# 3. Frontend (novo terminal)
-cd frontend
-npm install
-cp .env.example .env        # VITE_API_URL=http://localhost:8000/api
-npm run dev                 # http://localhost:5173
-```
-
-Alternativamente, o script auxiliar automatiza tudo isso:
-
-```bash
-./scripts/start.sh all        # inicia db + backend + frontend
-./scripts/start.sh frontend   # só frontend
-./scripts/stop.sh all
-./scripts/status.sh
-```
 
 ---
 
@@ -636,25 +600,6 @@ Documentação interativa da API:
 - **ReDoc:** `http://localhost:8000/api/redoc`
 
 Todos os endpoints protegidos exigem `Authorization: Bearer <access_token>`.
-
-#### Principais grupos de endpoints
-
-| Endpoint | Descrição |
-| --- | --- |
-| `POST /api/auth/login` | Login — retorna access token + refresh token |
-| `POST /api/auth/refresh` | Renova o access token |
-| `POST /api/auth/logout` | Invalida o refresh token |
-| `GET /api/devices` | Lista dispositivos (com paginação e filtros) |
-| `POST /api/devices/{id}/backup` | Dispara um backup manual |
-| `GET /api/devices/{id}/backup/stream` | Stream SSE com logs do backup em tempo real |
-| `GET /api/configurations/{id}/diff/{id2}` | Diff unificado entre duas versões |
-| `GET /api/backup-executions` | Histórico paginado de execuções de backup |
-| `GET /api/backup-executions/stats` | Taxa de sucesso e taxa de mudança |
-| `GET /api/search?q=termo` | Full-text search em todas as configurações |
-| `GET /api/audit` | Log de auditoria — somente admin |
-| `GET/PATCH /api/admin/settings/email` | Configurações de notificação por email |
-| `GET/PATCH /api/admin/settings/ldap` | Configurações LDAP / AD |
-| `GET /api/health` | Health check |
 
 ---
 
