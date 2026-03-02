@@ -1,0 +1,68 @@
+{
+  "title": "Audit",
+  "subtitle": "Complete system activity log",
+  "logsTitle": "Audit Logs",
+  "searchPlaceholder": "Search...",
+  "filters": {
+    "action": "Action",
+    "allActions": "All Actions",
+    "create": "Creation",
+    "update": "Update",
+    "delete": "Deletion",
+    "login": "Login",
+    "table": "Table",
+    "allTables": "All Tables"
+  },
+  "columns": {
+    "datetime": "Date/Time",
+    "user": "User",
+    "action": "Action",
+    "table": "Table",
+    "name": "Name",
+    "details": "Details",
+    "actions": "Actions"
+  },
+  "tables": {
+    "device": "Device",
+    "configuration": "Configuration",
+    "schedule": "Schedule",
+    "user": "User",
+    "credential": "Credential",
+    "template": "Template",
+    "brand": "Brand",
+    "category": "Category"
+  },
+  "none": "No audit logs found.",
+  "stats": {
+    "total": "Total Events",
+    "creates": "Creations",
+    "updates": "Updates",
+    "deletes": "Deletions"
+  },
+  "detail": {
+    "title": "Log Details",
+    "datetime": "Date/Time:",
+    "executedBy": "Executed by:",
+    "ip": "IP:",
+    "operationDesc": "Operation Description",
+    "affectedTable": "Affected table:",
+    "recordId": "Record ID:",
+    "previousValues": "Previous Values",
+    "newValues": "New Values",
+    "createdData": "Created Data",
+    "deletedData": "Deleted Data",
+    "sessionInfo": "Session Information",
+    "user": "User:",
+    "userAgent": "User Agent:"
+  },
+  "events": {
+    "created": "Record created",
+    "deleted": "Record deleted",
+    "fieldChanged": "Field \"{{field}}\" changed",
+    "fieldsChanged": "{{count}} fields changed",
+    "updated": "Record updated",
+    "login": "Login performed",
+    "logout": "Logout performed",
+    "backupExecuted": "Backup executed"
+  }
+}

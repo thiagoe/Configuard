@@ -1,0 +1,70 @@
+{
+  "title": "Schedules",
+  "subtitle": "Manage automatic backups and maintenance windows",
+  "active": "Active Schedules",
+  "create": "New Schedule",
+  "createDesc": "Configure automatic backup scheduling.",
+  "loading": "Loading schedules...",
+  "columns": {
+    "name": "Name",
+    "categories": "Categories",
+    "devices": "Devices",
+    "frequency": "Frequency",
+    "time": "Time",
+    "lastRun": "Last Run",
+    "nextRun": "Next Run",
+    "status": "Status",
+    "actions": "Actions"
+  },
+  "fields": {
+    "name": "Name *",
+    "status": "Status",
+    "active": "Active",
+    "description": "Description",
+    "descriptionPlaceholder": "Optional schedule description",
+    "scheduleType": "Schedule Type",
+    "time": "Time",
+    "dayOfWeek": "Day of Week",
+    "dayOfMonth": "Day of Month",
+    "cronExpression": "Cron Expression",
+    "cronPlaceholder": "0 2 * * *",
+    "categories": "Categories",
+    "categoriesHint": "Click on a category to see its devices",
+    "noCategories": "No categories registered.",
+    "devices": "Devices",
+    "noDevices": "No devices registered.",
+    "devicesViaCategories": "{{count}} device(s) will be included via selected categories",
+    "individualDevices": "Individual Devices",
+    "coveredByCategory": "covered by category",
+    "allDevicesCovered": "All devices are already covered by the selected categories."
+  },
+  "types": {
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "cron": "Cron",
+    "custom": "Custom"
+  },
+  "weekdays": {
+    "sunday": "Sunday",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday"
+  },
+  "frequency": {
+    "daily": "Daily",
+    "weekly": "Weekly (Day {{day}})",
+    "monthly": "Monthly (Day {{day}})",
+    "cron": "Cron"
+  },
+  "validation": {
+    "selectTarget": "Select at least one category or device for the schedule."
+  },
+  "maintenance": {
+    "title": "Maintenance Windows",
+    "new": "New Window"
+  }
+}

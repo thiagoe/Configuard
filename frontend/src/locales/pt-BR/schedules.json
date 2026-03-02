@@ -1,0 +1,70 @@
+{
+  "title": "Agendamento",
+  "subtitle": "Gerenciar backups automáticos e janelas de manutenção",
+  "active": "Agendamentos Ativos",
+  "create": "Novo Agendamento",
+  "createDesc": "Configure o agendamento de backups automáticos.",
+  "loading": "Carregando agendamentos...",
+  "columns": {
+    "name": "Nome",
+    "categories": "Categorias",
+    "devices": "Dispositivos",
+    "frequency": "Frequência",
+    "time": "Horário",
+    "lastRun": "Última Execução",
+    "nextRun": "Próxima Execução",
+    "status": "Status",
+    "actions": "Ações"
+  },
+  "fields": {
+    "name": "Nome *",
+    "status": "Status",
+    "active": "Ativo",
+    "description": "Descrição",
+    "descriptionPlaceholder": "Descrição opcional do agendamento",
+    "scheduleType": "Tipo de Agendamento",
+    "time": "Horário",
+    "dayOfWeek": "Dia da Semana",
+    "dayOfMonth": "Dia do Mês",
+    "cronExpression": "Expressão Cron",
+    "cronPlaceholder": "0 2 * * *",
+    "categories": "Categorias",
+    "categoriesHint": "Clique em uma categoria para ver seus dispositivos",
+    "noCategories": "Nenhuma categoria cadastrada.",
+    "devices": "Dispositivos",
+    "noDevices": "Nenhum dispositivo cadastrado.",
+    "devicesViaCategories": "{{count}} dispositivo(s) serão incluídos via categorias selecionadas",
+    "individualDevices": "Dispositivos Individuais",
+    "coveredByCategory": "incluído pela categoria",
+    "allDevicesCovered": "Todos os dispositivos já estão cobertos pelas categorias selecionadas."
+  },
+  "types": {
+    "daily": "Diário",
+    "weekly": "Semanal",
+    "monthly": "Mensal",
+    "cron": "Cron",
+    "custom": "Custom"
+  },
+  "weekdays": {
+    "sunday": "Domingo",
+    "monday": "Segunda",
+    "tuesday": "Terça",
+    "wednesday": "Quarta",
+    "thursday": "Quinta",
+    "friday": "Sexta",
+    "saturday": "Sábado"
+  },
+  "frequency": {
+    "daily": "Diário",
+    "weekly": "Semanal (Dia {{day}})",
+    "monthly": "Mensal (Dia {{day}})",
+    "cron": "Cron"
+  },
+  "validation": {
+    "selectTarget": "Selecione pelo menos uma categoria ou um dispositivo para o agendamento."
+  },
+  "maintenance": {
+    "title": "Janelas de Manutenção",
+    "new": "Nova Janela"
+  }
+}

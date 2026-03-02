@@ -1,0 +1,23 @@
+{
+  "sections": {
+    "main": "Menu Principal",
+    "config": "Configuração",
+    "admin": "Administração"
+  },
+  "items": {
+    "dashboard": "Dashboard",
+    "devices": "Dispositivos",
+    "backups": "Backups",
+    "versions": "Versionamento",
+    "diff": "Comparar (Diff)",
+    "search": "Busca",
+    "templates": "Templates",
+    "schedules": "Agendamento",
+    "brands": "Marcas",
+    "categories": "Categorias",
+    "models": "Modelos",
+    "credentials": "Credenciais",
+    "admin": "Administração",
+    "audit": "Auditoria"
+  }
+}

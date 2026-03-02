@@ -1,0 +1,126 @@
+{
+  "title": "Backups e Coletas",
+  "subtitle": "Histórico de coletas de configuração",
+  "historyTitle": "Histórico de Coletas",
+  "searchPlaceholder": "Buscar por dispositivo ou IP...",
+  "filterDevice": "Filtrar por dispositivo",
+  "filterStatus": "Filtrar por status",
+  "allDevices": "Todos os dispositivos",
+  "allStatuses": "Todos os status",
+  "loading": "Carregando histórico...",
+  "none": "Nenhum backup encontrado",
+  "noneDesc": "Execute um backup em um dispositivo para ver o histórico aqui",
+  "columns": {
+    "status": "Status",
+    "device": "Dispositivo",
+    "ip": "IP",
+    "datetime": "Data/Hora",
+    "duration": "Duração",
+    "changed": "Alteração",
+    "method": "Método",
+    "actions": "Ações"
+  },
+  "status": {
+    "success": "Sucesso",
+    "failed": "Falha",
+    "timeout": "Timeout",
+    "unknown": "Desconhecido"
+  },
+  "method": {
+    "scheduled": "Agendado",
+    "manual": "Manual"
+  },
+  "changed": "Alterado",
+  "unchanged": "Sem alteração",
+  "viewDeviceHistory": "Ver histórico do dispositivo",
+  "downloadConfig": "Baixar configuração",
+  "diff": {
+    "title": "Comparação de Configurações",
+    "subtitle": "Compare diferentes versões de configuração",
+    "selectTitle": "Selecionar Versões para Comparar",
+    "device": "Dispositivo",
+    "oldVersion": "Versão Antiga",
+    "newVersion": "Versão Nova",
+    "loading": "Carregando...",
+    "loadingDiff": "Carregando diff...",
+    "selectHint": "Selecione duas versões para comparar.",
+    "viewOriginal": "Ver Original",
+    "downloadPatch": "Baixar Patch",
+    "fullFile": "Arquivo completo",
+    "summaryTitle": "Resumo das Mudanças",
+    "addedLines": "+{{count}} linhas",
+    "removedLines": "-{{count}} linhas",
+    "select": "Selecione"
+  },
+  "history": {
+    "title": "Histórico de Backups",
+    "configVersions": "Versões de Configuração",
+    "compareSelected": "Comparar Selecionadas",
+    "loading": "Carregando backups...",
+    "none": "Nenhum backup encontrado",
+    "noneDesc": "Ainda não há backups disponíveis para este dispositivo",
+    "columns": {
+      "version": "Versão",
+      "collectedAt": "Data de Coleta",
+      "method": "Método",
+      "changes": "Mudanças",
+      "hash": "Hash",
+      "actions": "Ações"
+    },
+    "changesDetected": "Mudanças detectadas",
+    "noChanges": "Sem mudanças",
+    "compareDialog": {
+      "title": "Comparação de Configurações",
+      "desc": "Comparando versões {{v1}} e {{v2}}",
+      "loading": "Carregando diff..."
+    },
+    "viewDialog": {
+      "title": "Configuração - Versão {{version}}",
+      "collectedAt": "Coletada em {{date}}"
+    },
+    "download": "Baixar",
+    "close": "Fechar",
+    "viewConfig": "Visualizar configuração",
+    "downloadBackup": "Baixar backup",
+    "toast": {
+      "maxVersions": "Selecione no máximo 2 versões para comparar",
+      "exactVersions": "Selecione exatamente 2 versões para comparar",
+      "downloadSuccess": "Backup baixado com sucesso",
+      "downloadError": "Erro ao baixar o backup",
+      "loadError": "Erro ao carregar configuração"
+    }
+  },
+  "versions": {
+    "title": "Versionamento",
+    "subtitle": "Histórico de mudanças e versões de configuração",
+    "historyTitle": "Histórico de Versões",
+    "allDevices": "Todos os dispositivos",
+    "selectDevice": "Selecione um dispositivo",
+    "loading": "Carregando versões...",
+    "none": "Nenhuma versão encontrada",
+    "noneDesc": "Execute um backup em um dispositivo para ver o histórico de versões aqui",
+    "version": "Versão",
+    "device": "Dispositivo",
+    "latest": "Latest",
+    "view": "Ver",
+    "download": "Baixar",
+    "lines": "{{count}} linhas",
+    "changed": "Alterado",
+    "unchanged": "Sem alterações",
+    "initial": "Versão inicial",
+    "method": {
+      "manual": "Manual",
+      "scheduled": "Agendado"
+    },
+    "pagination": {
+      "page": "Página {{page}} de {{total}} ({{count}} versões)",
+      "prev": "Anterior",
+      "next": "Próximo"
+    },
+    "stats": {
+      "totalVersions": "Total de Versões",
+      "versionedDevices": "Dispositivos Versionados",
+      "totalSize": "Tamanho Total"
+    }
+  }
+}

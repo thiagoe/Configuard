@@ -1,0 +1,141 @@
+{
+  "title": "Backup Templates",
+  "subtitle": "Manage command templates for backups",
+  "list": "Template List",
+  "create": "New Template",
+  "createDesc": "Configure backup commands and parameters",
+  "none": "No templates registered",
+  "noneSearch": "No templates found",
+  "noneSearchDesc": "Try adjusting your search terms",
+  "searchPlaceholder": "Search templates by name, description or commands...",
+  "total": "Total: {{count}} templates",
+  "showing": "{{count}} of {{total}} templates",
+  "columns": {
+    "name": "Name",
+    "mode": "Mode",
+    "description": "Description",
+    "actions": "Actions"
+  },
+  "mode": {
+    "steps": "Steps",
+    "simple": "Simple"
+  },
+  "tabs": {
+    "basic": "Basic",
+    "steps": "Steps",
+    "advanced": "Advanced"
+  },
+  "fields": {
+    "name": "Name *",
+    "useSteps": "Advanced Mode (Steps)",
+    "useStepsDesc": "Configure individual steps with expect, pauses and error handling",
+    "commands": "Commands *",
+    "commandsPlaceholder": "show running-config\nshow version\nshow interfaces",
+    "commandsHint": "One command per line. They will be executed in sequence.",
+    "description": "Description",
+    "connectionTimeout": "Connection Timeout",
+    "commandTimeout": "Command Timeout",
+    "preCommands": "Pre-Execution Commands",
+    "postCommands": "Post-Execution Commands"
+  },
+  "viewTitle": "View Template: {{name}}",
+  "commandsLabel": "Commands",
+  "noCommands": "No commands",
+  "toast": {
+    "updated": "Template updated",
+    "created": "Template created",
+    "exported": "{{count}} template(s) exported!",
+    "exportNone": "Select at least one template to export",
+    "exportedSingle": "Template exported!",
+    "deleteNone": "Select at least one template to delete",
+    "confirmDelete": "Are you sure you want to delete {{count}} template(s)?",
+    "deleted": "{{count}} template(s) deleted!",
+    "cloneNone": "Select at least one template to clone",
+    "cloned": "{{count}} template(s) cloned!",
+    "cloneSuffix": "Copy",
+    "importInvalid": "Invalid file format",
+    "imported": "{{count}} template(s) imported!",
+    "importError": "Error importing templates"
+  },
+  "validation": {
+    "commandRequired": "Fill in the command for all steps",
+    "patternRequired": "Fill in the pattern (regex) for all steps",
+    "pauseRequired": "Set the pause time for pause-type steps"
+  },
+  "advanced": {
+    "tabs": {
+      "prompts": "Prompts",
+      "auth": "Auth",
+      "timeouts": "Timeouts",
+      "commands": "Commands"
+    },
+    "promptPatterns": "Prompt Patterns",
+    "mainPrompt": "Main Prompt (Regex)",
+    "paginationPattern": "Pagination Pattern",
+    "paginationKey": "Pagination Key",
+    "lineEnding": "Line Ending",
+    "lfDefault": "LF (\\n) - Default",
+    "crlfMikrotik": "CRLF (\\r\\n) - MikroTik",
+    "authentication": "Authentication",
+    "loginPrompt": "Login Prompt",
+    "passwordPrompt": "Password Prompt",
+    "enablePrompt": "Enable Prompt",
+    "enableNoPassword": "Run Enable (no password)",
+    "enablePasswordRequired": "Require Enable Password",
+    "connectionSec": "Connection (sec)",
+    "commandSec": "Command (sec)",
+    "prePostCommands": "Pre/Post Commands",
+    "preExecution": "Pre-Execution",
+    "postExecution": "Post-Execution",
+    "outputCleanup": "Output Cleanup",
+    "enable": "Enable",
+    "regexHint": "Regex (one per line) to remove from start of output",
+    "errorPatterns": "Error Patterns"
+  },
+  "steps": {
+    "title": "Execution Steps",
+    "subtitle": "Configure commands and actions in execution order",
+    "none": "No steps configured. Add commands and actions above.",
+    "types": {
+      "command": "Command",
+      "commandDesc": "Send a command to the device",
+      "expect": "Wait",
+      "expectDesc": "Wait for a specific pattern in the output",
+      "pause": "Pause",
+      "pauseDesc": "Wait a moment before continuing",
+      "setPrompt": "Set Prompt",
+      "setPromptDesc": "Define the prompt pattern to wait for",
+      "enterMode": "Enter Mode",
+      "enterModeDesc": "Enter privileged/config mode",
+      "sendKey": "Send Key",
+      "sendKeyDesc": "Send a key (Enter, Space, Tab, etc.)"
+    },
+    "fields": {
+      "command": "Command",
+      "pattern": "Pattern (Regex)",
+      "patternHint": "Use regular expressions. E.g.: #|>|\\$ for common prompts",
+      "key": "Key",
+      "keyHint": "Sends the key directly to the device without waiting for response",
+      "pauseTime": "Pause Time (ms)",
+      "keyDelay": "Delay after key (seconds)",
+      "timeout": "Timeout (seconds)",
+      "commandDelay": "Delay after command (ms)",
+      "onError": "On Failure",
+      "retries": "Retries",
+      "captureOutput": "Capture Output",
+      "captureOutputDesc": "Include this command output in the backup",
+      "enabled": "Enabled",
+      "enabledDesc": "Disable to skip this step",
+      "description": "Description (optional)",
+      "descriptionPlaceholder": "Description of the purpose of this step..."
+    },
+    "keys": {
+      "space": "Space"
+    },
+    "onError": {
+      "continue": "Continue",
+      "stop": "Stop",
+      "retry": "Retry"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "title": "Dashboard",
+  "subtitle": "Visão geral do sistema de backup",
+  "stats": {
+    "devices": "Dispositivos",
+    "executions": "Execuções (7d)",
+    "successRate": "Taxa Sucesso",
+    "failures": "Falhas (7d)",
+    "schedules": "Agendamentos",
+    "changeRate": "Taxa Alteração"
+  },
+  "recentExecutions": "Execuções Recentes",
+  "loading": "Carregando...",
+  "noExecutions": "Nenhuma execução recente",
+  "scheduled": "(agendado)",
+  "changed": "Alterado",
+  "unchanged": "Sem alteração",
+  "failed": "Falha",
+  "timeout": "Timeout",
+  "alerts": "Alertas",
+  "noAlerts": "Nenhum alerta crítico",
+  "allBackupsOk": "Todos os backups estão funcionando normalmente"
+}

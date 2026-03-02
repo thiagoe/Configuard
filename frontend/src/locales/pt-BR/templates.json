@@ -1,0 +1,141 @@
+{
+  "title": "Templates de Backup",
+  "subtitle": "Gerencie os templates de comandos para backup",
+  "list": "Lista de Templates",
+  "create": "Novo Template",
+  "createDesc": "Configure comandos e parâmetros de backup",
+  "none": "Nenhum template cadastrado",
+  "noneSearch": "Nenhum template encontrado",
+  "noneSearchDesc": "Tente ajustar os termos de busca",
+  "searchPlaceholder": "Buscar templates por nome, descrição ou comandos...",
+  "total": "Total: {{count}} templates",
+  "showing": "{{count}} de {{total}} templates",
+  "columns": {
+    "name": "Nome",
+    "mode": "Modo",
+    "description": "Descrição",
+    "actions": "Ações"
+  },
+  "mode": {
+    "steps": "Passos",
+    "simple": "Simples"
+  },
+  "tabs": {
+    "basic": "Básico",
+    "steps": "Passos",
+    "advanced": "Avançado"
+  },
+  "fields": {
+    "name": "Nome *",
+    "useSteps": "Modo Avançado (Passos)",
+    "useStepsDesc": "Configure passos individuais com expect, pausas e tratamento de erros",
+    "commands": "Comandos *",
+    "commandsPlaceholder": "show running-config\nshow version\nshow interfaces",
+    "commandsHint": "Um comando por linha. Serão executados em sequência.",
+    "description": "Descrição",
+    "connectionTimeout": "Timeout Conexão",
+    "commandTimeout": "Timeout Comando",
+    "preCommands": "Comandos Pré-Execução",
+    "postCommands": "Comandos Pós-Execução"
+  },
+  "viewTitle": "Visualizar Template: {{name}}",
+  "commandsLabel": "Comandos",
+  "noCommands": "Nenhum comando",
+  "toast": {
+    "updated": "Template atualizado",
+    "created": "Template criado",
+    "exported": "{{count}} template(s) exportado(s)!",
+    "exportNone": "Selecione ao menos um template para exportar",
+    "exportedSingle": "Template exportado!",
+    "deleteNone": "Selecione ao menos um template para excluir",
+    "confirmDelete": "Tem certeza que deseja excluir {{count}} template(s)?",
+    "deleted": "{{count}} template(s) excluído(s)!",
+    "cloneNone": "Selecione ao menos um template para clonar",
+    "cloned": "{{count}} template(s) clonado(s)!",
+    "cloneSuffix": "Cópia",
+    "importInvalid": "Formato de arquivo inválido",
+    "imported": "{{count}} template(s) importado(s)!",
+    "importError": "Erro ao importar templates"
+  },
+  "validation": {
+    "commandRequired": "Preencha o comando em todos os passos",
+    "patternRequired": "Preencha o padrão (regex) em todos os passos",
+    "pauseRequired": "Defina o tempo de pausa para os passos do tipo pausa"
+  },
+  "advanced": {
+    "tabs": {
+      "prompts": "Prompts",
+      "auth": "Auth",
+      "timeouts": "Timeouts",
+      "commands": "Comandos"
+    },
+    "promptPatterns": "Padrões de Prompt",
+    "mainPrompt": "Prompt Principal (Regex)",
+    "paginationPattern": "Padrão de Paginação",
+    "paginationKey": "Tecla de Paginação",
+    "lineEnding": "Terminação de Linha",
+    "lfDefault": "LF (\\n) - Padrão",
+    "crlfMikrotik": "CRLF (\\r\\n) - MikroTik",
+    "authentication": "Autenticação",
+    "loginPrompt": "Prompt de Login",
+    "passwordPrompt": "Prompt de Senha",
+    "enablePrompt": "Prompt de Enable",
+    "enableNoPassword": "Executar Enable (sem senha)",
+    "enablePasswordRequired": "Requer Senha de Enable",
+    "connectionSec": "Conexão (seg)",
+    "commandSec": "Comando (seg)",
+    "prePostCommands": "Comandos Pré/Pós",
+    "preExecution": "Pré-Execução",
+    "postExecution": "Pós-Execução",
+    "outputCleanup": "Limpeza de Saída",
+    "enable": "Habilitar",
+    "regexHint": "Regex (um por linha) para remover do início da saída",
+    "errorPatterns": "Padrões de Erro"
+  },
+  "steps": {
+    "title": "Passos de Execução",
+    "subtitle": "Configure os comandos e ações em ordem de execução",
+    "none": "Nenhum passo configurado. Adicione comandos e ações acima.",
+    "types": {
+      "command": "Comando",
+      "commandDesc": "Envia um comando para o dispositivo",
+      "expect": "Aguardar",
+      "expectDesc": "Aguarda um padrão específico na saída",
+      "pause": "Pausa",
+      "pauseDesc": "Aguarda um tempo antes de continuar",
+      "setPrompt": "Definir Prompt",
+      "setPromptDesc": "Define o padrão de prompt a aguardar",
+      "enterMode": "Entrar Modo",
+      "enterModeDesc": "Entra em modo privilegiado/config",
+      "sendKey": "Enviar Tecla",
+      "sendKeyDesc": "Envia uma tecla (Enter, Space, Tab, etc.)"
+    },
+    "fields": {
+      "command": "Comando",
+      "pattern": "Padrão (Regex)",
+      "patternHint": "Use expressões regulares. Ex: #|>|\\$ para prompts comuns",
+      "key": "Tecla",
+      "keyHint": "Envia a tecla diretamente ao dispositivo sem aguardar resposta",
+      "pauseTime": "Tempo de Pausa (ms)",
+      "keyDelay": "Delay após tecla (segundos)",
+      "timeout": "Timeout (segundos)",
+      "commandDelay": "Delay após comando (ms)",
+      "onError": "Ao Falhar",
+      "retries": "Tentativas",
+      "captureOutput": "Capturar Saída",
+      "captureOutputDesc": "Incluir saída deste comando no backup",
+      "enabled": "Habilitado",
+      "enabledDesc": "Desabilite para pular este passo",
+      "description": "Descrição (opcional)",
+      "descriptionPlaceholder": "Descrição do propósito deste passo..."
+    },
+    "keys": {
+      "space": "Space (Espaço)"
+    },
+    "onError": {
+      "continue": "Continuar",
+      "stop": "Parar",
+      "retry": "Tentar Novamente"
+    }
+  }
+}

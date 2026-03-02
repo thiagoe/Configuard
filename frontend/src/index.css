@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes indeterminate-progress {
+  0% { transform: translateX(-100%) scaleX(0.3); }
+  50% { transform: translateX(0%) scaleX(0.6); }
+  100% { transform: translateX(100%) scaleX(0.3); }
+}
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Network Management Theme - Professional Tech Aesthetic */
+    --background: 220 20% 8%;
+    --foreground: 210 40% 98%;
+
+    --card: 220 18% 12%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 220 20% 10%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Deep blue - network/infrastructure vibe */
+    --primary: 214 95% 45%;
+    --primary-foreground: 210 40% 98%;
+    --primary-glow: 214 100% 60%;
+
+    /* Darker blue-gray for secondary actions */
+    --secondary: 220 18% 18%;
+    --secondary-foreground: 210 40% 98%;
+
+    /* Subtle dark backgrounds */
+    --muted: 220 15% 15%;
+    --muted-foreground: 215 20% 65%;
+
+    /* Cyan accent for active/monitoring states */
+    --accent: 180 85% 45%;
+    --accent-foreground: 210 40% 98%;
+
+    /* Amber for changes/alerts */
+    --warning: 38 92% 50%;
+    --warning-foreground: 220 20% 8%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 220 15% 20%;
+    --input: 220 15% 18%;
+    --ring: 214 95% 45%;
+
+    --radius: 0.5rem;
+
+    /* Custom design tokens */
+    --sidebar-background: 220 20% 8%;
+    --sidebar-foreground: 210 20% 70%;
+    --sidebar-primary: 214 95% 45%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 220 18% 15%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 220 15% 15%;
+    --sidebar-ring: 214 95% 45%;
+
+    /* Gradient tokens */
+    --gradient-primary: linear-gradient(135deg, hsl(214 95% 45%), hsl(214 100% 60%));
+    --gradient-accent: linear-gradient(135deg, hsl(180 85% 45%), hsl(180 90% 55%));
+    --gradient-warning: linear-gradient(135deg, hsl(38 92% 50%), hsl(38 95% 60%));
+    
+    /* Shadow tokens */
+    --shadow-glow: 0 0 30px hsla(214, 95%, 45%, 0.3);
+    --shadow-card: 0 4px 20px hsla(220, 20%, 0%, 0.4);
+    --shadow-elevated: 0 8px 40px hsla(220, 20%, 0%, 0.6);
+
+    /* Transition tokens */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

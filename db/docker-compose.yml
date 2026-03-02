@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  postgresql:
+    image: postgres:16-alpine
+    container_name: configuard_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-configuard123}
+      POSTGRES_USER: ${DB_USER:-configuard}
+      POSTGRES_DB: ${DB_NAME:-configuard}
+      TZ: America/Sao_Paulo
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - ./data/pgdata:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
+      - /etc/localtime:/etc/localtime:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-configuard} -d ${DB_NAME:-configuard}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - configuard_network
+
+networks:
+  configuard_network:
+    driver: bridge

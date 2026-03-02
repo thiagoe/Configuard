@@ -1,0 +1,345 @@
+{
+  "title": "Administration",
+  "subtitle": "System management",
+  "credentials": {
+    "title": "Credentials",
+    "subtitle": "Manage device access credentials",
+    "new": "New Credential",
+    "edit": "Edit Credential",
+    "listTitle": "Registered Credentials",
+    "none": "No credentials registered. Click \"New Credential\" to add one.",
+    "loading": "Loading credentials...",
+    "created": "Credential created",
+    "updated": "Credential updated",
+    "deleted": "Credential deleted",
+    "confirmDelete": "Are you sure you want to delete this credential?",
+    "fields": {
+      "name": "Name *",
+      "namePlaceholder": "e.g. Admin Switch",
+      "username": "Username *",
+      "usernamePlaceholder": "e.g. admin",
+      "password": "Password",
+      "passwordPlaceholder": "Access password",
+      "passwordHint": "(leave empty to keep current)",
+      "description": "Description",
+      "descriptionPlaceholder": "Optional credential description",
+      "useSSHKey": "Use SSH Key",
+      "useSSHKeyDesc": "Authenticate via OpenSSH private key instead of password",
+      "privateKey": "Private Key",
+      "privateKeyPlaceholder": "-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----",
+      "privateKeyHint": "(leave empty to keep current)",
+      "passphrase": "Key Passphrase",
+      "passphrasePlaceholder": "Private key password (if any)"
+    },
+    "auth": {
+      "password": "Password",
+      "key": "Key"
+    },
+    "columns": {
+      "name": "Name",
+      "username": "Username",
+      "auth": "Authentication",
+      "description": "Description",
+      "actions": "Actions"
+    },
+    "saving": "Saving...",
+    "saveChanges": "Save Changes",
+    "create": "Create Credential"
+  },
+  "tabs": {
+    "overview": "Overview",
+    "users": "Users",
+    "security": "Security",
+    "database": "Database",
+    "email": "Settings",
+    "ldap": "LDAP / AD",
+    "language": "Language",
+    "importExport": "Import / Export"
+  },
+  "importExport": {
+    "title": "Import / Export Devices",
+    "subtitle": "Backup or migrate devices in CSV format",
+    "export": {
+      "title": "Export Devices",
+      "desc": "Download all registered devices in CSV format. Credentials and templates are excluded for security. The file can be opened in Excel.",
+      "button": "Export CSV",
+      "downloading": "Exporting...",
+      "success": "Devices exported successfully",
+      "error": "Error exporting devices"
+    },
+    "import": {
+      "title": "Import Devices",
+      "desc": "Select a previously exported CSV file. Devices with the same name and IP will be skipped.",
+      "selectFile": "Select CSV file",
+      "preview": "Preview of devices to import",
+      "columns": {
+        "name": "Name",
+        "ip": "IP",
+        "port": "Port",
+        "protocol": "Protocol",
+        "brand": "Brand",
+        "category": "Category",
+        "model": "Model",
+        "credential": "Credential",
+        "status": "Status"
+      },
+      "button": "Import {{count}} device(s)",
+      "importing": "Importing...",
+      "invalidFile": "Invalid CSV file or no devices found",
+      "result": {
+        "title": "Import complete",
+        "created": "{{count}} created",
+        "skipped": "{{count}} skipped (already existed)",
+        "errors": "{{count}} error(s)"
+      },
+      "errorDetail": "Row {{row}}: {{name}} — {{error}}"
+    }
+  },
+  "overview": {
+    "activeUsers": "Active Users",
+    "administrator": "administrator",
+    "systemStatus": "System Status",
+    "online": "Online",
+    "allServicesOk": "all services running",
+    "database": "Database",
+    "connected": "Connected",
+    "version": "Version"
+  },
+  "language": {
+    "title": "Interface Language",
+    "subtitle": "Select the display language for the system",
+    "portuguese": "Português",
+    "portugueseDesc": "Portuguese (Brazil)",
+    "english": "English",
+    "englishDesc": "English (United States)",
+    "saved": "Language changed successfully!",
+    "current": "Current language"
+  },
+  "users": {
+    "title": "User Management",
+    "searchPlaceholder": "Search by name or email",
+    "roleFilter": "Role",
+    "allRoles": "All",
+    "refresh": "Refresh",
+    "newUser": "New User",
+    "loading": "Loading users...",
+    "columns": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "toast": {
+      "roleUpdated": "Role updated",
+      "activated": "User activated",
+      "deactivated": "User deactivated",
+      "created": "User created successfully",
+      "updated": "User updated",
+      "deleted": "User deleted"
+    },
+    "create": {
+      "title": "New Local User",
+      "desc": "Create a local user for system access"
+    },
+    "edit": {
+      "title": "Edit User",
+      "desc": "Update the user's information"
+    },
+    "fields": {
+      "fullName": "Full Name",
+      "fullNamePlaceholder": "e.g. John Smith",
+      "email": "Email *",
+      "emailPlaceholder": "user@company.com",
+      "password": "Password *",
+      "passwordPlaceholder": "Minimum 6 characters",
+      "passwordEdit": "New Password",
+      "passwordEditHint": "(leave empty to keep current password)",
+      "role": "Role"
+    },
+    "confirmDelete": "Are you sure you want to delete this user? This action cannot be undone.",
+    "saving": "Saving...",
+    "save": "Save",
+    "create_btn": "Create User"
+  },
+  "database": {
+    "title": "Database Statistics",
+    "loading": "Loading statistics...",
+    "stats": {
+      "users": "Users",
+      "devices": "Devices",
+      "configurations": "Configurations",
+      "templates": "Templates",
+      "credentials": "Credentials",
+      "brands": "Brands",
+      "categories": "Categories",
+      "schedules": "Schedules",
+      "audit": "Audit",
+      "totalSize": "Database Size"
+    }
+  },
+  "settings": {
+    "loadError": "Error loading settings",
+    "saveError": "Error saving settings",
+    "retention": {
+      "title": "Backup Retention",
+      "desc": "Configure the backup version retention policy",
+      "label": "Maximum Versions per Device (Default)",
+      "hint": "When a device reaches this number of versions, the oldest ones will be automatically removed. This value can be customized individually for each device.",
+      "validationError": "Value must be between 1 and 1000",
+      "saved": "Backup retention saved successfully"
+    },
+    "audit": {
+      "title": "Audit Retention",
+      "desc": "Configure how long audit logs are kept",
+      "label": "Retention Days",
+      "hint": "Audit logs older than this period will be automatically removed. Maximum value: 3650 days (10 years).",
+      "validationError": "Value must be between 1 and 3650 days",
+      "saved": "Audit retention saved successfully"
+    },
+    "save": "Save"
+  },
+  "audit": {
+    "title": "Audit Logs",
+    "searchPlaceholder": "Search...",
+    "actionFilter": "Action",
+    "tableFilter": "Table",
+    "allActions": "All",
+    "allTables": "All",
+    "loading": "Loading logs...",
+    "noRecords": "No records found",
+    "details": "Details",
+    "actions": {
+      "CREATE": "Creation",
+      "UPDATE": "Update",
+      "DELETE": "Deletion",
+      "LOGIN": "Login",
+      "LOGOUT": "Logout"
+    },
+    "columns": {
+      "datetime": "Date/Time",
+      "user": "User",
+      "action": "Action",
+      "table": "Table",
+      "description": "Description",
+      "actions": "Actions"
+    },
+    "dialog": {
+      "title": "Log Details",
+      "datetime": "Date/Time:",
+      "executedBy": "Executed by:",
+      "ip": "IP:",
+      "operationDesc": "Operation Description",
+      "affectedTable": "Affected table:",
+      "recordId": "Record ID:",
+      "previousValues": "Previous Values",
+      "newValues": "New Values",
+      "createdData": "Created Data",
+      "deletedData": "Deleted Data"
+    },
+    "desc": {
+      "record": "record",
+      "empty": "(empty)",
+      "yes": "Yes",
+      "no": "No",
+      "created": "New {{table}} created: {{name}}",
+      "createdNoName": "New {{table}} created",
+      "deleted": "{{table}} deleted: {{name}}",
+      "deletedNoName": "{{table}} deleted",
+      "updated": "{{table}} updated: {{name}}",
+      "fieldChanged": "Field \"{{field}}\" changed",
+      "fieldsChanged": "{{count}} fields changed",
+      "login": "Login successful",
+      "logout": "Logout performed"
+    }
+  },
+  "email": {
+    "loadError": "Error loading email settings",
+    "saveError": "Error saving settings",
+    "savePrefsError": "Error saving preferences",
+    "smtpSaved": "Email settings saved",
+    "prefsSaved": "Notification preferences saved",
+    "testError": "Error sending test email",
+    "configureFirst": "Configure SMTP server and recipients first",
+    "smtp": {
+      "title": "SMTP Configuration",
+      "desc": "Configure the email server for sending notifications",
+      "enable": "Enable email notifications",
+      "server": "SMTP Server",
+      "port": "Port",
+      "tls": "Use TLS/STARTTLS",
+      "username": "SMTP Username",
+      "password": "SMTP Password",
+      "passwordSet": "(configured — leave empty to keep current)",
+      "passwordPlaceholder": "SMTP server password",
+      "sender": "Sender Email (From)",
+      "recipients": "Recipients",
+      "recipientsHint": "(separate multiple with ;)",
+      "save": "Save Settings",
+      "sendTest": "Send Test Email"
+    },
+    "notifications": {
+      "title": "Notification Events",
+      "desc": "Select which events should trigger email notifications (manual backups do not generate notifications)",
+      "backupFailed": "Scheduled backup failure",
+      "backupSuccess": "Scheduled backup success",
+      "deviceDisabled": "Host disabled",
+      "deviceDeleted": "Host deleted",
+      "save": "Save Preferences"
+    }
+  },
+  "ldap": {
+    "loadError": "Error loading LDAP settings",
+    "saveError": "Error saving LDAP settings",
+    "testError": "Error testing LDAP connection",
+    "saved": "LDAP settings saved",
+    "connection": {
+      "title": "LDAP Connection",
+      "desc": "Server and connection protocol for Active Directory",
+      "enable": "Enable LDAP / Active Directory authentication",
+      "server": "Server (hostname or IP)",
+      "port": "Port",
+      "ssl": "SSL (LDAPS, port 636)",
+      "starttls": "STARTTLS"
+    },
+    "serviceAccount": {
+      "title": "Service Account (Bind)",
+      "desc": "Credentials used to search users in the directory",
+      "bindDn": "Bind DN",
+      "password": "Service Account Password",
+      "passwordSet": "(configured — leave empty to keep current)",
+      "passwordPlaceholder": "Service account password"
+    },
+    "userSearch": {
+      "title": "User Search",
+      "desc": "User search configuration in the directory. Use {username} in the filter as a placeholder.",
+      "baseDn": "Base DN",
+      "userFilter": "User Filter",
+      "usernameAttr": "Username Attribute",
+      "emailAttr": "Email Attribute",
+      "nameAttr": "Name Attribute"
+    },
+    "groupMapping": {
+      "title": "Group → Role Mapping",
+      "desc": "Maps Active Directory groups to system roles. Use {dn} in the group filter as a placeholder.",
+      "groupBaseDn": "Group Base DN",
+      "groupFilter": "Group Filter",
+      "noMappings": "No mappings configured. Click \"+ Add Mapping\" to get started.",
+      "addMapping": "Add Mapping",
+      "defaultRole": "Default Role (no group mapped)",
+      "roleBlocked": "Access Blocked",
+      "roleModerator": "Moderator",
+      "roleUser": "User",
+      "tokenTtl": "Token Duration (minutes)",
+      "tokenTtlHint": "Default: 480 min (8h). LDAP users do not have a refresh token."
+    },
+    "test": {
+      "title": "Test Connection",
+      "desc": "Verifies the connection to the LDAP server using the configured service account",
+      "usernamePlaceholder": "Test username (optional)",
+      "configureFirst": "Configure the LDAP server first",
+      "button": "Test"
+    },
+    "save": "Save LDAP Settings"
+  }
+}

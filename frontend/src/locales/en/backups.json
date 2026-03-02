@@ -1,0 +1,126 @@
+{
+  "title": "Backups & Collections",
+  "subtitle": "Configuration collection history",
+  "historyTitle": "Collection History",
+  "searchPlaceholder": "Search by device or IP...",
+  "filterDevice": "Filter by device",
+  "filterStatus": "Filter by status",
+  "allDevices": "All devices",
+  "allStatuses": "All statuses",
+  "loading": "Loading history...",
+  "none": "No backups found",
+  "noneDesc": "Run a backup on a device to see the history here",
+  "columns": {
+    "status": "Status",
+    "device": "Device",
+    "ip": "IP",
+    "datetime": "Date/Time",
+    "duration": "Duration",
+    "changed": "Changed",
+    "method": "Method",
+    "actions": "Actions"
+  },
+  "status": {
+    "success": "Success",
+    "failed": "Failed",
+    "timeout": "Timeout",
+    "unknown": "Unknown"
+  },
+  "method": {
+    "scheduled": "Scheduled",
+    "manual": "Manual"
+  },
+  "changed": "Changed",
+  "unchanged": "Unchanged",
+  "viewDeviceHistory": "View device history",
+  "downloadConfig": "Download configuration",
+  "diff": {
+    "title": "Configuration Comparison",
+    "subtitle": "Compare different configuration versions",
+    "selectTitle": "Select Versions to Compare",
+    "device": "Device",
+    "oldVersion": "Old Version",
+    "newVersion": "New Version",
+    "loading": "Loading...",
+    "loadingDiff": "Loading diff...",
+    "selectHint": "Select two versions to compare.",
+    "viewOriginal": "View Original",
+    "downloadPatch": "Download Patch",
+    "fullFile": "Full file",
+    "summaryTitle": "Change Summary",
+    "addedLines": "+{{count}} lines",
+    "removedLines": "-{{count}} lines",
+    "select": "Select"
+  },
+  "history": {
+    "title": "Backup History",
+    "configVersions": "Configuration Versions",
+    "compareSelected": "Compare Selected",
+    "loading": "Loading backups...",
+    "none": "No backups found",
+    "noneDesc": "No backups available for this device yet",
+    "columns": {
+      "version": "Version",
+      "collectedAt": "Collected At",
+      "method": "Method",
+      "changes": "Changes",
+      "hash": "Hash",
+      "actions": "Actions"
+    },
+    "changesDetected": "Changes detected",
+    "noChanges": "No changes",
+    "compareDialog": {
+      "title": "Configuration Comparison",
+      "desc": "Comparing versions {{v1}} and {{v2}}",
+      "loading": "Loading diff..."
+    },
+    "viewDialog": {
+      "title": "Configuration - Version {{version}}",
+      "collectedAt": "Collected at {{date}}"
+    },
+    "download": "Download",
+    "close": "Close",
+    "viewConfig": "View configuration",
+    "downloadBackup": "Download backup",
+    "toast": {
+      "maxVersions": "Select at most 2 versions to compare",
+      "exactVersions": "Select exactly 2 versions to compare",
+      "downloadSuccess": "Backup downloaded successfully",
+      "downloadError": "Error downloading backup",
+      "loadError": "Error loading configuration"
+    }
+  },
+  "versions": {
+    "title": "Versioning",
+    "subtitle": "Configuration change history and versions",
+    "historyTitle": "Version History",
+    "allDevices": "All devices",
+    "selectDevice": "Select a device",
+    "loading": "Loading versions...",
+    "none": "No versions found",
+    "noneDesc": "Run a backup on a device to see the version history here",
+    "version": "Version",
+    "device": "Device",
+    "latest": "Latest",
+    "view": "View",
+    "download": "Download",
+    "lines": "{{count}} lines",
+    "changed": "Changed",
+    "unchanged": "No changes",
+    "initial": "Initial version",
+    "method": {
+      "manual": "Manual",
+      "scheduled": "Scheduled"
+    },
+    "pagination": {
+      "page": "Page {{page}} of {{total}} ({{count}} versions)",
+      "prev": "Previous",
+      "next": "Next"
+    },
+    "stats": {
+      "totalVersions": "Total Versions",
+      "versionedDevices": "Versioned Devices",
+      "totalSize": "Total Size"
+    }
+  }
+}

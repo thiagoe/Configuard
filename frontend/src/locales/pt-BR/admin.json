@@ -1,0 +1,345 @@
+{
+  "title": "Administração",
+  "subtitle": "Gerenciamento do sistema",
+  "credentials": {
+    "title": "Credenciais",
+    "subtitle": "Gerencie credenciais de acesso aos dispositivos",
+    "new": "Nova Credencial",
+    "edit": "Editar Credencial",
+    "listTitle": "Credenciais Cadastradas",
+    "none": "Nenhuma credencial cadastrada. Clique em \"Nova Credencial\" para adicionar.",
+    "loading": "Carregando credenciais...",
+    "created": "Credencial criada",
+    "updated": "Credencial atualizada",
+    "deleted": "Credencial excluída",
+    "confirmDelete": "Tem certeza que deseja excluir esta credencial?",
+    "fields": {
+      "name": "Nome *",
+      "namePlaceholder": "Ex: Admin Switch",
+      "username": "Usuário *",
+      "usernamePlaceholder": "Ex: admin",
+      "password": "Senha",
+      "passwordPlaceholder": "Senha de acesso",
+      "passwordHint": "(deixe vazio para manter)",
+      "description": "Descrição",
+      "descriptionPlaceholder": "Descrição opcional da credencial",
+      "useSSHKey": "Usar Chave SSH",
+      "useSSHKeyDesc": "Autenticar via chave privada OpenSSH em vez de senha",
+      "privateKey": "Chave Privada",
+      "privateKeyPlaceholder": "-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----",
+      "privateKeyHint": "(deixe vazio para manter)",
+      "passphrase": "Passphrase da Chave",
+      "passphrasePlaceholder": "Senha da chave privada (se houver)"
+    },
+    "auth": {
+      "password": "Senha",
+      "key": "Chave"
+    },
+    "columns": {
+      "name": "Nome",
+      "username": "Usuário",
+      "auth": "Autenticação",
+      "description": "Descrição",
+      "actions": "Ações"
+    },
+    "saving": "Salvando...",
+    "saveChanges": "Salvar Alterações",
+    "create": "Criar Credencial"
+  },
+  "tabs": {
+    "overview": "Visão Geral",
+    "users": "Usuários",
+    "security": "Segurança",
+    "database": "Banco de Dados",
+    "email": "Configurações",
+    "ldap": "LDAP / AD",
+    "language": "Idioma",
+    "importExport": "Importar / Exportar"
+  },
+  "importExport": {
+    "title": "Importar / Exportar Dispositivos",
+    "subtitle": "Faça backup ou migre dispositivos em formato CSV",
+    "export": {
+      "title": "Exportar Dispositivos",
+      "desc": "Baixe todos os dispositivos cadastrados em formato CSV. Credenciais e templates não são exportados por segurança. O arquivo pode ser aberto no Excel.",
+      "button": "Exportar CSV",
+      "downloading": "Exportando...",
+      "success": "Dispositivos exportados com sucesso",
+      "error": "Erro ao exportar dispositivos"
+    },
+    "import": {
+      "title": "Importar Dispositivos",
+      "desc": "Selecione um arquivo CSV exportado anteriormente. Dispositivos com mesmo nome e IP serão ignorados.",
+      "selectFile": "Selecionar arquivo CSV",
+      "preview": "Prévia dos dispositivos a importar",
+      "columns": {
+        "name": "Nome",
+        "ip": "IP",
+        "port": "Porta",
+        "protocol": "Protocolo",
+        "brand": "Marca",
+        "category": "Categoria",
+        "model": "Modelo",
+        "credential": "Credencial",
+        "status": "Status"
+      },
+      "button": "Importar {{count}} dispositivo(s)",
+      "importing": "Importando...",
+      "invalidFile": "Arquivo CSV inválido ou sem dispositivos",
+      "result": {
+        "title": "Importação concluída",
+        "created": "{{count}} criado(s)",
+        "skipped": "{{count}} ignorado(s) (já existiam)",
+        "errors": "{{count}} erro(s)"
+      },
+      "errorDetail": "Linha {{row}}: {{name}} — {{error}}"
+    }
+  },
+  "overview": {
+    "activeUsers": "Usuários Ativos",
+    "administrator": "administrador",
+    "systemStatus": "Status do Sistema",
+    "online": "Online",
+    "allServicesOk": "todos os serviços funcionando",
+    "database": "Banco de Dados",
+    "connected": "Conectado",
+    "version": "Versão"
+  },
+  "language": {
+    "title": "Idioma da Interface",
+    "subtitle": "Selecione o idioma de exibição do sistema",
+    "portuguese": "Português",
+    "portugueseDesc": "Português do Brasil",
+    "english": "English",
+    "englishDesc": "English (United States)",
+    "saved": "Idioma alterado com sucesso!",
+    "current": "Idioma atual"
+  },
+  "users": {
+    "title": "Gerenciamento de Usuários",
+    "searchPlaceholder": "Buscar por nome ou email",
+    "roleFilter": "Role",
+    "allRoles": "Todas",
+    "refresh": "Atualizar",
+    "newUser": "Novo Usuário",
+    "loading": "Carregando usuários...",
+    "columns": {
+      "name": "Nome",
+      "email": "Email",
+      "role": "Role",
+      "status": "Status",
+      "actions": "Ações"
+    },
+    "toast": {
+      "roleUpdated": "Role atualizada",
+      "activated": "Usuário ativado",
+      "deactivated": "Usuário desativado",
+      "created": "Usuário criado com sucesso",
+      "updated": "Usuário atualizado",
+      "deleted": "Usuário excluído"
+    },
+    "create": {
+      "title": "Novo Usuário Local",
+      "desc": "Crie um usuário local para acesso ao sistema"
+    },
+    "edit": {
+      "title": "Editar Usuário",
+      "desc": "Altere os dados do usuário"
+    },
+    "fields": {
+      "fullName": "Nome Completo",
+      "fullNamePlaceholder": "Ex: João Silva",
+      "email": "Email *",
+      "emailPlaceholder": "usuario@empresa.com",
+      "password": "Senha *",
+      "passwordPlaceholder": "Mínimo 6 caracteres",
+      "passwordEdit": "Nova Senha",
+      "passwordEditHint": "(deixe vazio para manter a senha atual)",
+      "role": "Role"
+    },
+    "confirmDelete": "Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.",
+    "saving": "Salvando...",
+    "save": "Salvar",
+    "create_btn": "Criar Usuário"
+  },
+  "database": {
+    "title": "Estatísticas do Banco",
+    "loading": "Carregando estatísticas...",
+    "stats": {
+      "users": "Usuários",
+      "devices": "Dispositivos",
+      "configurations": "Configurações",
+      "templates": "Templates",
+      "credentials": "Credenciais",
+      "brands": "Marcas",
+      "categories": "Categorias",
+      "schedules": "Agendamentos",
+      "audit": "Auditoria",
+      "totalSize": "Tamanho do Banco"
+    }
+  },
+  "settings": {
+    "loadError": "Erro ao carregar configurações",
+    "saveError": "Erro ao salvar configurações",
+    "retention": {
+      "title": "Retenção de Backup",
+      "desc": "Configure a política de retenção de versões de backup",
+      "label": "Máximo de Versões por Dispositivo (Padrão)",
+      "hint": "Quando um dispositivo atingir este número de versões, as mais antigas serão removidas automaticamente. Este valor pode ser personalizado individualmente em cada dispositivo.",
+      "validationError": "O valor deve estar entre 1 e 1000",
+      "saved": "Retenção de backup salva com sucesso"
+    },
+    "audit": {
+      "title": "Retenção de Auditoria",
+      "desc": "Configure por quanto tempo os logs de auditoria serão mantidos",
+      "label": "Dias de Retenção",
+      "hint": "Logs de auditoria mais antigos que este período serão removidos automaticamente. Valor máximo: 3650 dias (10 anos).",
+      "validationError": "O valor deve estar entre 1 e 3650 dias",
+      "saved": "Retenção de auditoria salva com sucesso"
+    },
+    "save": "Salvar"
+  },
+  "audit": {
+    "title": "Logs de Auditoria",
+    "searchPlaceholder": "Buscar...",
+    "actionFilter": "Ação",
+    "tableFilter": "Tabela",
+    "allActions": "Todas",
+    "allTables": "Todas",
+    "loading": "Carregando logs...",
+    "noRecords": "Nenhum registro encontrado",
+    "details": "Detalhes",
+    "actions": {
+      "CREATE": "Criação",
+      "UPDATE": "Atualização",
+      "DELETE": "Exclusão",
+      "LOGIN": "Login",
+      "LOGOUT": "Logout"
+    },
+    "columns": {
+      "datetime": "Data/Hora",
+      "user": "Usuário",
+      "action": "Ação",
+      "table": "Tabela",
+      "description": "Descrição",
+      "actions": "Ações"
+    },
+    "dialog": {
+      "title": "Detalhes do Log",
+      "datetime": "Data/Hora:",
+      "executedBy": "Executado por:",
+      "ip": "IP:",
+      "operationDesc": "Descrição da Operação",
+      "affectedTable": "Tabela afetada:",
+      "recordId": "ID do registro:",
+      "previousValues": "Valores Anteriores",
+      "newValues": "Valores Novos",
+      "createdData": "Dados Criados",
+      "deletedData": "Dados Excluídos"
+    },
+    "desc": {
+      "record": "registro",
+      "empty": "(vazio)",
+      "yes": "Sim",
+      "no": "Não",
+      "created": "Novo {{table}} criado: {{name}}",
+      "createdNoName": "Novo {{table}} criado",
+      "deleted": "{{table}} excluído: {{name}}",
+      "deletedNoName": "{{table}} excluído",
+      "updated": "{{table}} atualizado: {{name}}",
+      "fieldChanged": "Campo \"{{field}}\" alterado",
+      "fieldsChanged": "{{count}} campos alterados",
+      "login": "Login realizado com sucesso",
+      "logout": "Logout realizado"
+    }
+  },
+  "email": {
+    "loadError": "Erro ao carregar configurações de email",
+    "saveError": "Erro ao salvar configurações",
+    "savePrefsError": "Erro ao salvar preferências",
+    "smtpSaved": "Configurações de email salvas",
+    "prefsSaved": "Preferências de notificação salvas",
+    "testError": "Erro ao enviar email de teste",
+    "configureFirst": "Configure servidor SMTP e destinatários primeiro",
+    "smtp": {
+      "title": "Configuração SMTP",
+      "desc": "Configure o servidor de email para envio de notificações",
+      "enable": "Habilitar notificações por email",
+      "server": "Servidor SMTP",
+      "port": "Porta",
+      "tls": "Usar TLS/STARTTLS",
+      "username": "Usuário SMTP",
+      "password": "Senha SMTP",
+      "passwordSet": "(configurada — deixe vazio para manter)",
+      "passwordPlaceholder": "Senha do servidor SMTP",
+      "sender": "Email Remetente (From)",
+      "recipients": "Destinatários",
+      "recipientsHint": "(separe múltiplos com ;)",
+      "save": "Salvar Configurações",
+      "sendTest": "Enviar Email de Teste"
+    },
+    "notifications": {
+      "title": "Eventos de Notificação",
+      "desc": "Selecione quais eventos devem gerar notificações por email (backups manuais não geram notificações)",
+      "backupFailed": "Falha em backup agendado",
+      "backupSuccess": "Sucesso em backup agendado",
+      "deviceDisabled": "Host desativado",
+      "deviceDeleted": "Host excluído",
+      "save": "Salvar Preferências"
+    }
+  },
+  "ldap": {
+    "loadError": "Erro ao carregar configurações LDAP",
+    "saveError": "Erro ao salvar configurações LDAP",
+    "testError": "Erro ao testar conexão LDAP",
+    "saved": "Configurações LDAP salvas",
+    "connection": {
+      "title": "Conexão LDAP",
+      "desc": "Servidor e protocolo de conexão com o Active Directory",
+      "enable": "Habilitar autenticação LDAP / Active Directory",
+      "server": "Servidor (hostname ou IP)",
+      "port": "Porta",
+      "ssl": "SSL (LDAPS, porta 636)",
+      "starttls": "STARTTLS"
+    },
+    "serviceAccount": {
+      "title": "Conta de Serviço (Bind)",
+      "desc": "Credenciais usadas para busca de usuários no diretório",
+      "bindDn": "Bind DN",
+      "password": "Senha da Conta de Serviço",
+      "passwordSet": "(configurada — deixe vazio para manter)",
+      "passwordPlaceholder": "Senha da conta de serviço"
+    },
+    "userSearch": {
+      "title": "Busca de Usuários",
+      "desc": "Configuração de busca de usuários no diretório. Use {username} no filtro como placeholder.",
+      "baseDn": "Base DN",
+      "userFilter": "Filtro de Usuário",
+      "usernameAttr": "Atributo de Usuário",
+      "emailAttr": "Atributo de Email",
+      "nameAttr": "Atributo de Nome"
+    },
+    "groupMapping": {
+      "title": "Mapeamento de Grupos → Roles",
+      "desc": "Mapeia grupos do Active Directory para roles do sistema. Use {dn} no filtro de grupo como placeholder.",
+      "groupBaseDn": "Base DN de Grupos",
+      "groupFilter": "Filtro de Grupos",
+      "noMappings": "Nenhum mapeamento configurado. Clique em \"+ Adicionar Mapeamento\" para começar.",
+      "addMapping": "Adicionar Mapeamento",
+      "defaultRole": "Role Padrão (sem grupo mapeado)",
+      "roleBlocked": "Acesso Bloqueado",
+      "roleModerator": "Moderador",
+      "roleUser": "Usuário",
+      "tokenTtl": "Duração do Token (minutos)",
+      "tokenTtlHint": "Padrão: 480 min (8h). Usuários LDAP não possuem refresh token."
+    },
+    "test": {
+      "title": "Testar Conexão",
+      "desc": "Verifica a conexão com o servidor LDAP usando a conta de serviço configurada",
+      "usernamePlaceholder": "Usuário de teste (opcional)",
+      "configureFirst": "Configure o servidor LDAP primeiro",
+      "button": "Testar"
+    },
+    "save": "Salvar Configurações LDAP"
+  }
+}

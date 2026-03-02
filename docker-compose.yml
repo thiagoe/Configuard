@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  postgresql:
+    image: postgres:16-alpine
+    container_name: configuard_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-configuard123}
+      POSTGRES_USER: ${DB_USER:-configuard}
+      POSTGRES_DB: ${DB_NAME:-configuard}
+      TZ: America/Sao_Paulo
+    volumes:
+      - ./db/data/pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+      - /etc/localtime:/etc/localtime:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-configuard} -d ${DB_NAME:-configuard}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - configuard_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: configuard_backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Sobrescreve DB_HOST do .env — conecta ao banco pelo nome de serviço Docker
+      DB_HOST: postgresql
+      LOG_DIR: /app/logs
+      TZ: ${TIMEZONE:-America/Sao_Paulo}
+    volumes:
+      - ./backend:/app          # código-fonte mapeado — hot-reload via --reload do uvicorn
+      - /app/venv               # volume anônimo: protege o venv da imagem caso exista venv/ no host
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    networks:
+      - configuard_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: configuard_frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html  # build estático mapeado
+    depends_on:
+      - backend
+    networks:
+      - configuard_network
+
+networks:
+  configuard_network:
+    driver: bridge

@@ -1,0 +1,68 @@
+{
+  "title": "Auditoria",
+  "subtitle": "Registro completo de atividades do sistema",
+  "logsTitle": "Logs de Auditoria",
+  "searchPlaceholder": "Buscar...",
+  "filters": {
+    "action": "Ação",
+    "allActions": "Todas Ações",
+    "create": "Criação",
+    "update": "Atualização",
+    "delete": "Exclusão",
+    "login": "Login",
+    "table": "Tabela",
+    "allTables": "Todas Tabelas"
+  },
+  "columns": {
+    "datetime": "Data/Hora",
+    "user": "Usuário",
+    "action": "Ação",
+    "table": "Tabela",
+    "name": "Nome",
+    "details": "Detalhes",
+    "actions": "Ações"
+  },
+  "tables": {
+    "device": "Dispositivo",
+    "configuration": "Configuração",
+    "schedule": "Agendamento",
+    "user": "Usuário",
+    "credential": "Credencial",
+    "template": "Template",
+    "brand": "Marca",
+    "category": "Categoria"
+  },
+  "none": "Nenhum log de auditoria encontrado.",
+  "stats": {
+    "total": "Total de Eventos",
+    "creates": "Criações",
+    "updates": "Atualizações",
+    "deletes": "Exclusões"
+  },
+  "detail": {
+    "title": "Detalhes do Log",
+    "datetime": "Data/Hora:",
+    "executedBy": "Executado por:",
+    "ip": "IP:",
+    "operationDesc": "Descrição da Operação",
+    "affectedTable": "Tabela afetada:",
+    "recordId": "ID do registro:",
+    "previousValues": "Valores Anteriores",
+    "newValues": "Valores Novos",
+    "createdData": "Dados Criados",
+    "deletedData": "Dados Excluídos",
+    "sessionInfo": "Informações da Sessão",
+    "user": "Usuário:",
+    "userAgent": "User Agent:"
+  },
+  "events": {
+    "created": "Registro criado",
+    "deleted": "Registro excluído",
+    "fieldChanged": "Campo \"{{field}}\" alterado",
+    "fieldsChanged": "{{count}} campos alterados",
+    "updated": "Registro atualizado",
+    "login": "Login realizado",
+    "logout": "Logout realizado",
+    "backupExecuted": "Backup executado"
+  }
+}

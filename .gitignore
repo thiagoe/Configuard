@@ -1,0 +1,81 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env
+.env.production
+.env.staging
+
+# Logs
+logs/
+*.log
+
+# Database
+db/data/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test coverage
+htmlcov/
+.coverage
+.pytest_cache/
+coverage.xml
+
+# Frontend specific
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# Backend specific
+backend/venv/
+backend/__pycache__/
+backend/logs/
+backend/*.pyc
+backend/.env
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+*.pid
+*.db
+*.sqlite
+.vite.log
+
+# Secrets (never commit)
+*.pem
+*.key
+secrets/
+
+# Claude Code
+.claude/
+
+# Lock files (optional — uncomment if you don't want to commit them)
+# bun.lockb
+# package-lock.json

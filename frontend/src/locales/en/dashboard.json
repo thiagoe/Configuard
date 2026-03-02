@@ -1,0 +1,23 @@
+{
+  "title": "Dashboard",
+  "subtitle": "System backup overview",
+  "stats": {
+    "devices": "Devices",
+    "executions": "Executions (7d)",
+    "successRate": "Success Rate",
+    "failures": "Failures (7d)",
+    "schedules": "Schedules",
+    "changeRate": "Change Rate"
+  },
+  "recentExecutions": "Recent Executions",
+  "loading": "Loading...",
+  "noExecutions": "No recent executions",
+  "scheduled": "(scheduled)",
+  "changed": "Changed",
+  "unchanged": "Unchanged",
+  "failed": "Failed",
+  "timeout": "Timeout",
+  "alerts": "Alerts",
+  "noAlerts": "No critical alerts",
+  "allBackupsOk": "All backups are running normally"
+}
