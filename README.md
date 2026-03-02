@@ -1,7 +1,5 @@
 # Configuard
 
-> Network device configuration backup, versioning and search — because "I saved it, I swear" is not a valid backup strategy.
-
 Configuard is a self-hosted web application for centralized management of network device configurations. It collects, organizes, versions and schedules backups of routers, switches, firewalls and any device accessible via SSH or Telnet.
 
 ---
@@ -9,19 +7,16 @@ Configuard is a self-hosted web application for centralized management of networ
 ## Table of Contents
 
 - [Features](#features)
-- [Architecture](#architecture)
 - [Requirements](#requirements)
 - [Quick Start](#quick-start)
   - [Docker (recommended)](#docker-recommended)
   - [Local development](#local-development)
 - [Configuration](#configuration)
-- [Database migrations](#database-migrations)
 - [User roles](#user-roles)
 - [Backup templates](#backup-templates)
 - [Schedules](#schedules)
 - [Search](#search)
 - [Scripts reference](#scripts-reference)
-- [Project structure](#project-structure)
 - [API](#api)
 - [Security notes](#security-notes)
 - [Contributing](#contributing)
@@ -48,44 +43,6 @@ Configuard is a self-hosted web application for centralized management of networ
 | **Multi-language UI** | Portuguese (pt-BR) and English (en); toggle in the Admin panel |
 | **Inactivity timeout** | Automatic logout after configurable idle period |
 | **Role-based access** | Admin, Moderator and User roles with granular permissions |
-
----
-
-## Architecture
-
-```text
-┌─────────────────────┐     HTTP / nginx      ┌──────────────────────┐
-│   Browser (React)   │ ────────────────────▶ │  nginx  (port 8080)  │
-│  Vite + TypeScript  │                       │  SPA + /api proxy    │
-└─────────────────────┘                       └──────────┬───────────┘
-                                                         │ /api/*
-                                              ┌──────────▼───────────┐
-                                              │  FastAPI (port 8000)  │
-                                              │  SQLAlchemy + Pydantic│
-                                              │  APScheduler          │
-                                              │  Paramiko / pexpect   │
-                                              └──────────┬───────────┘
-                                                         │
-                                              ┌──────────▼───────────┐
-                                              │   PostgreSQL 16       │
-                                              │  (Docker container)   │
-                                              └──────────────────────┘
-```
-
-### Stack
-
-| Layer | Technology |
-| --- | --- |
-| Frontend | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui (Radix UI), React Query, react-i18next |
-| Backend | Python 3.12, FastAPI, SQLAlchemy, Pydantic v2, Loguru |
-| Scheduler | APScheduler |
-| SSH | Paramiko (primary) + pexpect (fallback for legacy devices) |
-| Telnet | pexpect |
-| Database | PostgreSQL 16 |
-| Auth | JWT (access 15 min + refresh 7 days), bcrypt, AES-256-GCM for credentials |
-| LDAP | ldap3 |
-| Email | smtplib (Python standard library) |
-| Containers | Docker Compose |
 
 ---
 
@@ -241,32 +198,6 @@ VITE_INACTIVITY_TIMEOUT_MINUTES=30
 
 ---
 
-## Database migrations
-
-SQL migration files live in `db/init/` and are applied automatically in numerical order when the PostgreSQL container starts for the first time.
-
-To apply a new migration to an already-running container:
-
-```bash
-docker compose exec -T postgresql psql -U configuard -d configuard \
-  < db/init/NNN_migration_name.sql
-```
-
-| File | Description |
-| --- | --- |
-| `001_schema.sql` | Core schema (users, devices, credentials, configurations, templates) |
-| `002_seed.sql` | Initial data: admin user, default brands and templates |
-| `003_device_models.sql` | Hardware model support |
-| `004_schedule_categories.sql` | Schedule ↔ category many-to-many |
-| `005_device_model_id.sql` | Foreign key device → device_model |
-| `006_backup_executions.sql` | Backup execution audit table (hybrid storage) |
-| `007_email_settings.sql` | SMTP / email notification settings |
-| `008_ldap_settings.sql` | LDAP / Active Directory integration settings |
-| `009_remove_unused_columns.sql` | Drop columns never used by the UI |
-| `010_remove_category_template_fk.sql` | Remove legacy backup_template_id from categories |
-
----
-
 ## User roles
 
 | Role | Capabilities |
@@ -360,60 +291,10 @@ All scripts live in `scripts/` and are run from the project root.
 
 | Command | Description |
 | --- | --- |
-| `./scripts/start.sh [all\ | db\ | backend\ | frontend]` | Start services in local dev mode |
-| `./scripts/stop.sh [all\ | db\ | backend\ | frontend]` | Stop local dev services |
+| `./scripts/start.sh [all\|db\|backend\|frontend]` | Start services in local dev mode |
+| `./scripts/stop.sh [all\|db\|backend\|frontend]` | Stop local dev services |
 | `./scripts/status.sh` | Show running status and URLs |
-| `./scripts/reload.sh [all\ | frontend\ | backend]` | Rebuild and reload in Docker container mode |
-
----
-
-## Project structure
-
-```text
-configuard/
-├── frontend/                      # React application
-│   ├── src/
-│   │   ├── components/            # Reusable UI components
-│   │   │   └── admin/             # Admin panel sub-components
-│   │   ├── pages/                 # Route-level pages
-│   │   ├── services/              # API calls (axios)
-│   │   ├── hooks/                 # Custom React hooks
-│   │   ├── contexts/              # Auth context
-│   │   ├── locales/               # i18n translation files
-│   │   │   ├── pt-BR/             # Portuguese strings
-│   │   │   └── en/                # English strings
-│   │   └── i18n/                  # i18next configuration
-│   ├── Dockerfile                 # nginx:alpine serving dist/
-│   └── nginx.conf                 # SPA routing + /api proxy to backend
-│
-├── backend/                       # FastAPI application
-│   ├── app/
-│   │   ├── api/routes/            # Route handlers
-│   │   ├── models/                # SQLAlchemy ORM models
-│   │   ├── schemas/               # Pydantic request / response schemas
-│   │   ├── services/
-│   │   │   ├── backup_executor.py # SSH/Telnet execution engine
-│   │   │   ├── ssh_client.py      # Paramiko + pexpect dual-mode SSH
-│   │   │   ├── telnet_client.py   # pexpect Telnet client
-│   │   │   ├── scheduler.py       # APScheduler job management
-│   │   │   ├── email.py           # SMTP notification service
-│   │   │   ├── ldap_service.py    # LDAP / AD authentication
-│   │   │   └── encryption.py      # AES-256-GCM credential encryption
-│   │   └── core/                  # Config, DB session, deps, logging, timezone
-│   ├── logs/                      # Log files (rotated daily, 30-day retention)
-│   ├── main.py                    # FastAPI app entry point
-│   ├── Dockerfile
-│   └── requirements.txt
-│
-├── db/
-│   ├── docker-compose.yml         # Standalone PostgreSQL (for local dev)
-│   ├── init/                      # SQL migration files (001–010)
-│   └── data/                      # Persistent PostgreSQL data (gitignored)
-│
-├── scripts/                       # Helper shell scripts
-├── docker-compose.yml             # Full stack: postgresql + backend + frontend
-└── README.md
-```
+| `./scripts/reload.sh [all\|frontend\|backend]` | Rebuild and reload in Docker container mode |
 
 ---
 
@@ -425,25 +306,6 @@ Interactive API documentation:
 - **ReDoc:** `http://localhost:8000/api/redoc`
 
 All protected endpoints require `Authorization: Bearer <access_token>`.
-
-### Key endpoint groups
-
-| Endpoint | Description |
-| --- | --- |
-| `POST /api/auth/login` | Login — returns access token + refresh token |
-| `POST /api/auth/refresh` | Refresh the access token |
-| `POST /api/auth/logout` | Invalidate the refresh token |
-| `GET /api/devices` | List devices (with pagination and filters) |
-| `POST /api/devices/{id}/backup` | Trigger a manual backup |
-| `GET /api/devices/{id}/backup/stream` | SSE stream with real-time backup logs |
-| `GET /api/configurations/{id}/diff/{id2}` | Unified diff between two versions |
-| `GET /api/backup-executions` | Paginated backup execution history |
-| `GET /api/backup-executions/stats` | Success rate and change rate statistics |
-| `GET /api/search?q=term` | Full-text search across all configurations |
-| `GET /api/audit` | Audit log — admin only |
-| `GET/PATCH /api/admin/settings/email` | Email notification settings |
-| `GET/PATCH /api/admin/settings/ldap` | LDAP / AD settings |
-| `GET /api/health` | Health check |
 
 ---
 
@@ -461,24 +323,13 @@ All protected endpoints require `Authorization: Bearer <access_token>`.
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Commit your changes following [Conventional Commits](https://www.conventionalcommits.org/)
-4. Open a pull request describing what changed and why
-
 Bug reports and feature requests are welcome via [Issues](../../issues).
-
----
-
-> *If a backup failed, it's the network's fault until proven otherwise.*
-> *If the diff is huge, breathe and hunt for the `+` lines.*
-> *Do not confuse "backup" with "hope".*
 
 ---
 
 ## Português
 
-> Backup de configuração de rede com versionamento, diff e busca — porque "eu salvei, juro" não é estratégia de backup.
+> Backup de configuração de rede com versionamento, diff e busca.
 
 O Configuard é uma aplicação web auto-hospedada para gerenciamento centralizado de configurações de dispositivos de rede. Ele coleta, organiza, versiona e agenda backups de roteadores, switches, firewalls e qualquer dispositivo acessível via SSH ou Telnet.
 
@@ -487,19 +338,16 @@ O Configuard é uma aplicação web auto-hospedada para gerenciamento centraliza
 ### Índice
 
 - [Recursos](#recursos)
-- [Arquitetura](#arquitetura)
 - [Requisitos](#requisitos)
 - [Início rápido](#início-rápido)
   - [Docker (recomendado)](#docker-recomendado)
   - [Desenvolvimento local](#desenvolvimento-local)
 - [Configuração](#configuração)
-- [Migrações de banco de dados](#migrações-de-banco-de-dados)
 - [Papéis de usuário](#papéis-de-usuário)
 - [Templates de backup](#templates-de-backup)
 - [Agendamentos](#agendamentos)
 - [Busca](#busca)
 - [Referência dos scripts](#referência-dos-scripts)
-- [Estrutura do projeto](#estrutura-do-projeto)
 - [API](#api-1)
 - [Segurança](#segurança)
 - [Contribuindo](#contribuindo)
@@ -525,44 +373,6 @@ O Configuard é uma aplicação web auto-hospedada para gerenciamento centraliza
 | **Interface multi-idioma** | Português (pt-BR) e Inglês (en); alternável no painel Admin |
 | **Timeout de inatividade** | Logout automático após período de inatividade configurável |
 | **Controle de acesso** | Papéis Admin, Moderador e Usuário com permissões granulares |
-
----
-
-### Arquitetura
-
-```text
-┌─────────────────────┐     HTTP / nginx      ┌──────────────────────┐
-│   Navegador (React) │ ────────────────────▶ │  nginx  (porta 8080) │
-│  Vite + TypeScript  │                       │  SPA + proxy /api    │
-└─────────────────────┘                       └──────────┬───────────┘
-                                                         │ /api/*
-                                              ┌──────────▼───────────┐
-                                              │  FastAPI (porta 8000) │
-                                              │  SQLAlchemy + Pydantic│
-                                              │  APScheduler          │
-                                              │  Paramiko / pexpect   │
-                                              └──────────┬───────────┘
-                                                         │
-                                              ┌──────────▼───────────┐
-                                              │   PostgreSQL 16       │
-                                              │  (container Docker)   │
-                                              └──────────────────────┘
-```
-
-#### Stack
-
-| Camada | Tecnologia |
-| --- | --- |
-| Frontend | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui (Radix UI), React Query, react-i18next |
-| Backend | Python 3.12, FastAPI, SQLAlchemy, Pydantic v2, Loguru |
-| Agendador | APScheduler |
-| SSH | Paramiko (primário) + pexpect (fallback para dispositivos legados) |
-| Telnet | pexpect |
-| Banco de dados | PostgreSQL 16 |
-| Autenticação | JWT (access 15 min + refresh 7 dias), bcrypt, AES-256-GCM para credenciais |
-| LDAP | ldap3 |
-| Email | smtplib (biblioteca padrão do Python) |
-| Containers | Docker Compose |
 
 ---
 
@@ -718,32 +528,6 @@ VITE_INACTIVITY_TIMEOUT_MINUTES=30
 
 ---
 
-### Migrações de banco de dados
-
-Os arquivos de migração SQL ficam em `db/init/` e são aplicados automaticamente em ordem numérica quando o container PostgreSQL inicia pela primeira vez.
-
-Para aplicar uma nova migração em um container já em execução:
-
-```bash
-docker compose exec -T postgresql psql -U configuard -d configuard \
-  < db/init/NNN_nome_da_migracao.sql
-```
-
-| Arquivo | Descrição |
-| --- | --- |
-| `001_schema.sql` | Schema principal (usuários, dispositivos, credenciais, configurações, templates) |
-| `002_seed.sql` | Dados iniciais: usuário admin, marcas e templates padrão |
-| `003_device_models.sql` | Suporte a modelos de hardware |
-| `004_schedule_categories.sql` | Relação muitos-para-muitos agendamento ↔ categoria |
-| `005_device_model_id.sql` | Chave estrangeira dispositivo → modelo de dispositivo |
-| `006_backup_executions.sql` | Tabela de auditoria de execuções de backup (armazenamento híbrido) |
-| `007_email_settings.sql` | Configurações de notificação por email / SMTP |
-| `008_ldap_settings.sql` | Configurações de integração LDAP / Active Directory |
-| `009_remove_unused_columns.sql` | Remove colunas nunca usadas pela interface |
-| `010_remove_category_template_fk.sql` | Remove backup_template_id legado das categorias |
-
----
-
 ### Papéis de usuário
 
 | Papel | Permissões |
@@ -844,56 +628,6 @@ Todos os scripts ficam em `scripts/` e são executados a partir da raiz do proje
 
 ---
 
-### Estrutura do projeto
-
-```text
-configuard/
-├── frontend/                      # Aplicação React
-│   ├── src/
-│   │   ├── components/            # Componentes de UI reutilizáveis
-│   │   │   └── admin/             # Sub-componentes do painel Admin
-│   │   ├── pages/                 # Páginas por rota
-│   │   ├── services/              # Chamadas de API (axios)
-│   │   ├── hooks/                 # Custom React hooks
-│   │   ├── contexts/              # Auth context
-│   │   ├── locales/               # Arquivos de tradução i18n
-│   │   │   ├── pt-BR/             # Strings em português
-│   │   │   └── en/                # Strings em inglês
-│   │   └── i18n/                  # Configuração do i18next
-│   ├── Dockerfile                 # nginx:alpine servindo dist/
-│   └── nginx.conf                 # Roteamento SPA + proxy /api para o backend
-│
-├── backend/                       # Aplicação FastAPI
-│   ├── app/
-│   │   ├── api/routes/            # Handlers de rotas
-│   │   ├── models/                # Modelos ORM SQLAlchemy
-│   │   ├── schemas/               # Schemas Pydantic (request / response)
-│   │   ├── services/
-│   │   │   ├── backup_executor.py # Motor de execução SSH/Telnet
-│   │   │   ├── ssh_client.py      # SSH dual-mode Paramiko + pexpect
-│   │   │   ├── telnet_client.py   # Cliente Telnet pexpect
-│   │   │   ├── scheduler.py       # Gerenciamento de jobs APScheduler
-│   │   │   ├── email.py           # Serviço de notificação SMTP
-│   │   │   ├── ldap_service.py    # Autenticação LDAP / AD
-│   │   │   └── encryption.py      # Criptografia AES-256-GCM
-│   │   └── core/                  # Config, sessão DB, deps, logging, timezone
-│   ├── logs/                      # Arquivos de log (rotação diária, retenção 30 dias)
-│   ├── main.py                    # Ponto de entrada FastAPI
-│   ├── Dockerfile
-│   └── requirements.txt
-│
-├── db/
-│   ├── docker-compose.yml         # PostgreSQL standalone (para dev local)
-│   ├── init/                      # Arquivos de migração SQL (001–010)
-│   └── data/                      # Dados persistentes do PostgreSQL (gitignored)
-│
-├── scripts/                       # Scripts shell auxiliares
-├── docker-compose.yml             # Stack completa: postgresql + backend + frontend
-└── README.md
-```
-
----
-
 ### API
 
 Documentação interativa da API:
@@ -938,15 +672,4 @@ Todos os endpoints protegidos exigem `Authorization: Bearer <access_token>`.
 
 ### Contribuindo
 
-1. Faça um fork do repositório
-2. Crie uma branch de feature: `git checkout -b feature/minha-feature`
-3. Faça commit das suas mudanças seguindo [Conventional Commits](https://www.conventionalcommits.org/)
-4. Abra um pull request descrevendo o que mudou e por quê
-
 Reportes de bugs e solicitações de features são bem-vindos via [Issues](../../issues).
-
----
-
-> *Se um backup falhou, a culpa é da rede até que se prove o contrário.*
-> *Se o diff ficou grande, respire fundo e procure as linhas com `+`.*
-> *Não confunda "backup" com "torcer para dar certo".*
