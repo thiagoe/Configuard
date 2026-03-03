@@ -576,7 +576,7 @@ const BackupTemplates = () => {
               : undefined;
 
           await createMutation.mutateAsync({
-            name: `${templateData.name} (${t("toast.cloneSuffix")})`,
+            name: templateData.name,
             commands: templateData.commands || "",
             description: templateData.description || undefined,
             use_steps: templateData.use_steps || false,
@@ -633,7 +633,7 @@ const BackupTemplates = () => {
             {templates.length > 0 && (
               <Button variant="outline" onClick={handleExportAllTemplates}>
                 <Download className="h-4 w-4 mr-2" />
-                {tc("export")}
+                {tc("exportAll")}
               </Button>
             )}
             <Button onClick={() => openDialog()}>
