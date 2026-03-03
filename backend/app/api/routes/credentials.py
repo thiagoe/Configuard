@@ -8,7 +8,7 @@ from math import ceil
 
 from fastapi import APIRouter, HTTPException, status, Query
 
-from app.core.deps import CurrentUser, DbSession
+from app.core.deps import CurrentUser, CurrentModerator, DbSession
 from app.models.credential import Credential
 from app.schemas.credential import (
     CredentialCreate,
@@ -103,7 +103,7 @@ async def get_credential(
 @router.post("", response_model=CredentialResponse, status_code=status.HTTP_201_CREATED)
 async def create_credential(
     data: CredentialCreate,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """
@@ -163,7 +163,7 @@ async def create_credential(
 async def update_credential(
     credential_id: str,
     data: CredentialUpdate,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """
@@ -242,7 +242,7 @@ async def update_credential(
 @router.delete("/{credential_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_credential(
     credential_id: str,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """

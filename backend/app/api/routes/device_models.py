@@ -9,7 +9,7 @@ from math import ceil
 from fastapi import APIRouter, HTTPException, status, Query
 from sqlalchemy.orm import joinedload
 
-from app.core.deps import CurrentUser, DbSession
+from app.core.deps import CurrentUser, CurrentModerator, DbSession
 from app.models.device_model import DeviceModel
 from app.models.brand import Brand
 from app.models.category import Category
@@ -144,7 +144,7 @@ async def get_device_model(
 @router.post("", response_model=DeviceModelResponse, status_code=status.HTTP_201_CREATED)
 async def create_device_model(
     data: DeviceModelCreate,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """
@@ -203,7 +203,7 @@ async def create_device_model(
 async def update_device_model(
     device_model_id: str,
     data: DeviceModelUpdate,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """
@@ -276,7 +276,7 @@ async def update_device_model(
 @router.delete("/{device_model_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_device_model(
     device_model_id: str,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """

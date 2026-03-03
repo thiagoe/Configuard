@@ -16,7 +16,7 @@ from queue import Queue
 from threading import Thread
 from pydantic import BaseModel
 
-from app.core.deps import CurrentUser, DbSession
+from app.core.deps import CurrentUser, CurrentModerator, DbSession
 from app.models.device import Device
 from app.models.device_model import DeviceModel
 from app.models.brand import Brand
@@ -174,7 +174,7 @@ class DeviceImportResult(BaseModel):
 
 @router.get("/export")
 async def export_devices(
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """
@@ -220,7 +220,7 @@ async def export_devices(
 
 @router.post("/import", response_model=DeviceImportResult, status_code=status.HTTP_200_OK)
 async def import_devices(
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
     file: UploadFile = File(...),
 ):
@@ -407,7 +407,7 @@ async def get_device(
 @router.post("", response_model=DeviceResponse, status_code=status.HTTP_201_CREATED)
 async def create_device(
     data: DeviceCreate,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """
@@ -459,7 +459,7 @@ async def create_device(
 async def update_device(
     device_id: str,
     data: DeviceUpdate,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """
@@ -538,7 +538,7 @@ async def update_device(
 @router.delete("/{device_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_device(
     device_id: str,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """

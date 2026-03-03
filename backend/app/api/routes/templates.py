@@ -8,7 +8,7 @@ from math import ceil
 
 from fastapi import APIRouter, HTTPException, status, Query
 
-from app.core.deps import CurrentUser, DbSession
+from app.core.deps import CurrentUser, CurrentModerator, DbSession
 from app.models.backup_template import BackupTemplate, TemplateStep
 from app.schemas.template import (
     BackupTemplateCreate,
@@ -104,7 +104,7 @@ async def get_template(
 @router.post("", response_model=BackupTemplateResponse, status_code=status.HTTP_201_CREATED)
 async def create_template(
     data: BackupTemplateCreate,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """
@@ -195,7 +195,7 @@ async def create_template(
 async def update_template(
     template_id: str,
     data: BackupTemplateUpdate,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """
@@ -322,7 +322,7 @@ async def update_template(
 @router.delete("/{template_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_template(
     template_id: str,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """
@@ -366,7 +366,7 @@ async def delete_template(
 @router.post("/{template_id}/duplicate", response_model=BackupTemplateResponse, status_code=status.HTTP_201_CREATED)
 async def duplicate_template(
     template_id: str,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
     new_name: Optional[str] = Query(None, description="Name for the duplicated template"),
 ):

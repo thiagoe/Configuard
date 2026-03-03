@@ -8,7 +8,7 @@ from math import ceil
 
 from fastapi import APIRouter, HTTPException, status, Query
 
-from app.core.deps import CurrentUser, DbSession
+from app.core.deps import CurrentUser, CurrentModerator, DbSession
 from app.models.schedule import BackupSchedule, ScheduleType
 from app.models.device import Device
 from app.models.category import Category
@@ -145,7 +145,7 @@ async def get_schedule(
 @router.post("", response_model=ScheduleResponse, status_code=status.HTTP_201_CREATED)
 async def create_schedule(
     data: ScheduleCreate,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """
@@ -192,7 +192,7 @@ async def create_schedule(
 async def update_schedule(
     schedule_id: str,
     data: ScheduleUpdate,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """
@@ -249,7 +249,7 @@ async def update_schedule(
 @router.delete("/{schedule_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_schedule(
     schedule_id: str,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """

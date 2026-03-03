@@ -8,7 +8,7 @@ from math import ceil
 
 from fastapi import APIRouter, HTTPException, status, Query
 
-from app.core.deps import CurrentUser, DbSession
+from app.core.deps import CurrentUser, CurrentModerator, DbSession
 from app.models.category import Category
 from app.schemas.category import (
     CategoryCreate,
@@ -102,7 +102,7 @@ async def get_category(
 @router.post("", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED)
 async def create_category(
     data: CategoryCreate,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """
@@ -148,7 +148,7 @@ async def create_category(
 async def update_category(
     category_id: str,
     data: CategoryUpdate,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """
@@ -200,7 +200,7 @@ async def update_category(
 @router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_category(
     category_id: str,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """

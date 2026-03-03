@@ -24,15 +24,13 @@ security = HTTPBearer(auto_error=False)
 class StaticUser:
     """
     Represents an authenticated user when the API token is valid.
-    Since the token is shared, identity is static (admin role).
-    The actual user name/email shown in the UI comes from login response
-    stored by the frontend, not from this object.
+    Role is resolved from the database using the X-User-Id header.
     """
     id: str = "api-user"
     email: str = "api@system"
     full_name: Optional[str] = "API User"
     is_active: bool = True
-    _role: str = field(default="admin", repr=False)
+    _role: str = field(default="user", repr=False)
 
     @property
     def role_name(self) -> str:
@@ -40,16 +38,16 @@ class StaticUser:
 
     @property
     def is_admin(self) -> bool:
-        return True
+        return self._role == "admin"
 
     @property
     def is_moderator(self) -> bool:
-        return True
+        return self._role in ("admin", "moderator")
 
 
 def _resolve_user(db: Session, user_id: Optional[str]) -> StaticUser:
     """
-    Resolve the real user from the database using the user_id from the X-User-Id header.
+    Resolve the real user and their role from the database using the X-User-Id header.
     Falls back to the first active admin if not found (e.g. LDAP users without local account).
     """
     from app.models.user import User, UserRole
@@ -57,7 +55,9 @@ def _resolve_user(db: Session, user_id: Optional[str]) -> StaticUser:
     if user_id:
         user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
         if user:
-            return StaticUser(id=user.id, email=user.email, full_name=user.full_name)
+            user_role = db.query(UserRole).filter(UserRole.user_id == user.id).first()
+            role = user_role.role if user_role else "user"
+            return StaticUser(id=user.id, email=user.email, full_name=user.full_name, _role=role)
 
     # Fallback: first active admin
     admin = (
@@ -67,8 +67,8 @@ def _resolve_user(db: Session, user_id: Optional[str]) -> StaticUser:
         .first()
     )
     if admin:
-        return StaticUser(id=admin.id, email=admin.email, full_name=admin.full_name)
-    return StaticUser()
+        return StaticUser(id=admin.id, email=admin.email, full_name=admin.full_name, _role="admin")
+    return StaticUser(_role="admin")
 
 
 async def get_current_user(
@@ -122,14 +122,24 @@ async def get_current_user_optional(
 async def get_current_admin(
     current_user: Annotated[StaticUser, Depends(get_current_user)],
 ) -> StaticUser:
-    """Require admin role (always satisfied for valid API token)."""
+    """Require admin role."""
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin role required",
+        )
     return current_user
 
 
 async def get_current_moderator(
     current_user: Annotated[StaticUser, Depends(get_current_user)],
 ) -> StaticUser:
-    """Require moderator or admin role (always satisfied for valid API token)."""
+    """Require moderator or admin role."""
+    if not current_user.is_moderator:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Moderator role required",
+        )
     return current_user
 
 

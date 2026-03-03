@@ -8,7 +8,7 @@ from math import ceil
 
 from fastapi import APIRouter, HTTPException, status, Query
 
-from app.core.deps import CurrentUser, DbSession
+from app.core.deps import CurrentUser, CurrentModerator, DbSession
 from app.models.brand import Brand
 from app.schemas.brand import (
     BrandCreate,
@@ -102,7 +102,7 @@ async def get_brand(
 @router.post("", response_model=BrandResponse, status_code=status.HTTP_201_CREATED)
 async def create_brand(
     data: BrandCreate,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """
@@ -147,7 +147,7 @@ async def create_brand(
 async def update_brand(
     brand_id: str,
     data: BrandUpdate,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """
@@ -199,7 +199,7 @@ async def update_brand(
 @router.delete("/{brand_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_brand(
     brand_id: str,
-    current_user: CurrentUser,
+    current_user: CurrentModerator,
     db: DbSession,
 ):
     """
