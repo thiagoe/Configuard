@@ -328,8 +328,7 @@ The `templates/` directory contains ready-to-use backup templates that can be im
 | File | Device |
 | --- | --- |
 | `template-cisco.yaml` | Cisco |
-| `template-mikrotik-routeros---full-backup.yaml` | MikroTik RouterOS |
-| `template-mk_v2_1.yaml` | MikroTik (v2) |
+| `template-mikrotik-rb750.yaml` | MikroTik RB750 |
 | `template-huawei-ne8k.yaml` | Huawei NE8K |
 | `template-huawei-sw-6730.yaml` | Huawei SW-6730 |
 | `template-olt-huawei.yaml` | OLT Huawei |
@@ -634,8 +633,7 @@ O diretório `templates/` contém templates de backup prontos para uso, importá
 | Arquivo | Dispositivo |
 | --- | --- |
 | `template-cisco.yaml` | Cisco |
-| `template-mikrotik-routeros---full-backup.yaml` | MikroTik RouterOS |
-| `template-mk_v2_1.yaml` | MikroTik (v2) |
+| `template-mikrotik-rb750.yaml` | MikroTik RB750 |
 | `template-huawei-ne8k.yaml` | Huawei NE8K |
 | `template-huawei-sw-6730.yaml` | Huawei SW-6730 |
 | `template-olt-huawei.yaml` | OLT Huawei |
