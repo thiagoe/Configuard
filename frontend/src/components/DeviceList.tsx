@@ -512,28 +512,6 @@ const DeviceList = () => {
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  {/* Modelo — primeiro campo: ao selecionar, preenche Marca e Categoria */}
-                  <div className="space-y-2">
-                    <Label htmlFor="model_id">{t("fields.model")}</Label>
-                    <Select
-                      value={formData.model_id || "none"}
-                      onValueChange={(value) => handleModelChange(value === "none" ? "" : value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("modelOptional")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">{t("noModel")}</SelectItem>
-                        {deviceModels.map((model) => (
-                          <SelectItem key={model.id} value={model.id}>
-                            {model.name}
-                            {model.brand?.name ? ` — ${model.brand.name}` : ""}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">{t("fields.name")}</Label>
@@ -600,7 +578,27 @@ const DeviceList = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="model_id">{t("fields.model")}</Label>
+                      <Select
+                        value={formData.model_id || "none"}
+                        onValueChange={(value) => handleModelChange(value === "none" ? "" : value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder={t("modelOptional")} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">{t("noModel")}</SelectItem>
+                          {deviceModels.map((model) => (
+                            <SelectItem key={model.id} value={model.id}>
+                              {model.name}
+                              {model.brand?.name ? ` — ${model.brand.name}` : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="brand_id">{t("fields.brand")}</Label>
                       <Select
@@ -1012,28 +1010,6 @@ const DeviceList = () => {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4">
-            {/* Modelo — primeiro campo: ao selecionar, preenche Marca e Categoria */}
-            <div className="space-y-2">
-              <Label htmlFor="edit-model_id">{t("fields.model")}</Label>
-              <Select
-                value={editFormData.model_id || "none"}
-                onValueChange={handleEditModelChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={t("modelOptional")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">{t("noModel")}</SelectItem>
-                  {deviceModels.map((model) => (
-                    <SelectItem key={model.id} value={model.id}>
-                      {model.name}
-                      {model.brand?.name ? ` — ${model.brand.name}` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="edit-name">{t("fields.name")}</Label>
@@ -1100,7 +1076,27 @@ const DeviceList = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-model_id">{t("fields.model")}</Label>
+                <Select
+                  value={editFormData.model_id || "none"}
+                  onValueChange={handleEditModelChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("modelOptional")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">{t("noModel")}</SelectItem>
+                    {deviceModels.map((model) => (
+                      <SelectItem key={model.id} value={model.id}>
+                        {model.name}
+                        {model.brand?.name ? ` — ${model.brand.name}` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-brand_id">{t("fields.brand")}</Label>
                 <Select
