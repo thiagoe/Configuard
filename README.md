@@ -6,6 +6,7 @@ Configuard is a self-hosted web application for centralized management of networ
 
 ## Table of Contents
 
+- [Português](#português)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Quick Start](#quick-start)
@@ -20,7 +21,6 @@ Configuard is a self-hosted web application for centralized management of networ
 - [API](#api)
 - [Security notes](#security-notes)
 - [Contributing](#contributing)
-- [Português](#português)
 
 ---
 
