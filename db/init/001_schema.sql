@@ -131,6 +131,7 @@ CREATE TABLE IF NOT EXISTS backup_templates (
     login_prompt             VARCHAR(255) DEFAULT 'Username:|Login:',
     password_prompt          VARCHAR(255) DEFAULT 'Password:',
     enable_prompt            VARCHAR(255),
+    enable_required          BOOLEAN DEFAULT FALSE NOT NULL,
     enable_password_required BOOLEAN DEFAULT FALSE NOT NULL,
     pagination_pattern       VARCHAR(255) DEFAULT '--More--|<--- More --->',
     pagination_key           VARCHAR(10) DEFAULT ' ',
