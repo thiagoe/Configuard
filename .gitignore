@@ -28,6 +28,7 @@ build/
 .env.*.local
 *.env
 .env.production
+!frontend/.env.production
 .env.staging
 
 # Logs
