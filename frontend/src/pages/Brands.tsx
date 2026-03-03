@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 
 const Brands = () => {
+  const { isModerator } = useAuth();
   const { t } = useTranslation("devices");
   const { t: tc } = useTranslation("common");
 

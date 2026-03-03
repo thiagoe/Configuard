@@ -18,6 +18,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useTranslation } from "react-i18next";
 
 const Schedules = () => {
+  const { isModerator } = useAuth();
   const queryClient = useQueryClient();
   const { data: devicesData } = useDevices();
   const devices = devicesData?.items ?? [];

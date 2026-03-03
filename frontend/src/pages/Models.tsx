@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Search, Package } from "lucide-react";
 
 const Models = () => {
+  const { isModerator } = useAuth();
   const { t } = useTranslation("devices");
   const { t: tc } = useTranslation("common");
 

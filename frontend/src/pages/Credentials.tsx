@@ -16,6 +16,7 @@ import { Plus, Pencil, Trash2, Key, KeyRound } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const Credentials = () => {
+  const { isModerator } = useAuth();
   const { t } = useTranslation("admin");
   const { t: tc } = useTranslation("common");
 

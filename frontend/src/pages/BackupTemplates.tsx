@@ -61,6 +61,7 @@ interface FormData {
 }
 
 const BackupTemplates = () => {
+  const { isModerator } = useAuth();
   const { t } = useTranslation("templates");
   const { t: tc } = useTranslation("common");
 
