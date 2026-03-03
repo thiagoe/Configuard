@@ -38,7 +38,7 @@ services:
       - ./backend:/app          # código-fonte mapeado — hot-reload via --reload do uvicorn
       - /app/venv               # volume anônimo: protege o venv da imagem caso exista venv/ no host
     ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      - "${BACKEND_PORT:-8007}:8000"
     depends_on:
       postgresql:
         condition: service_healthy
@@ -52,7 +52,7 @@ services:
     container_name: configuard_frontend
     restart: unless-stopped
     ports:
-      - "${FRONTEND_PORT:-8080}:80"
+      - "${FRONTEND_PORT:-8008}:80"
     volumes:
       - ./frontend/dist:/usr/share/nginx/html  # build estático mapeado
     depends_on:

@@ -71,11 +71,15 @@ Configuard is a self-hosted web application for centralized management of networ
 git clone https://github.com/thiagoe/configuard.git
 cd configuard
 
-# 2. Start everything
+# 2. Configure environment variables
+cp .env.example .env
+# Edit .env and set secure values for DB_PASSWORD, API_TOKEN and ENCRYPTION_KEY
+
+# 3. Start everything
 #    Builds images, starts containers, applies migrations and seeds initial data
 docker compose up -d --build
 
-# 3. Open the browser
+# 4. Open the browser
 #    Frontend:  http://localhost:8080
 #    API docs:  http://localhost:8000/api/docs
 ```
@@ -422,11 +426,15 @@ O Configuard é uma aplicação web auto-hospedada para gerenciamento centraliza
 git clone https://github.com/thiagoe/configuard.git
 cd configuard
 
-# 2. Suba tudo
+# 2. Configure as variáveis de ambiente
+cp .env.example .env
+# Edite o .env e defina valores seguros para DB_PASSWORD, API_TOKEN e ENCRYPTION_KEY
+
+# 3. Suba tudo
 #    Constrói imagens, inicia containers, aplica migrações e popula dados iniciais
 docker compose up -d --build
 
-# 3. Abra no navegador
+# 4. Abra no navegador
 #    Frontend:  http://localhost:8080
 #    API docs:  http://localhost:8000/api/docs
 ```
