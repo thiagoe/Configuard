@@ -220,10 +220,12 @@ const Schedules = () => {
               <Calendar className="h-5 w-5" />
               {t("active")}
             </CardTitle>
-            <Button onClick={openCreate}>
-              <Plus className="h-4 w-4 mr-2" />
-              {t("create")}
-            </Button>
+            {isModerator && (
+              <Button onClick={openCreate}>
+                <Plus className="h-4 w-4 mr-2" />
+                {t("create")}
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -277,10 +279,10 @@ const Schedules = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
+                      {isModerator && <div className="flex gap-1">
                         <Button variant="ghost" size="sm" onClick={() => openEdit(schedule)}><Edit className="h-4 w-4" /></Button>
                         <Button variant="ghost" size="sm" onClick={() => deleteMutation.mutate(schedule.id)}><Trash2 className="h-4 w-4" /></Button>
-                      </div>
+                      </div>}
                     </TableCell>
                   </TableRow>
                 ))}

@@ -43,12 +43,14 @@ import { ptBR, enUS } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
 
 const DEVICE_SEARCH_KEY = "configuard_device_search";
 
 const DeviceList = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { isModerator } = useAuth();
   const { t, i18n } = useTranslation("devices");
   const dateFnsLocale = i18n.language === "pt-BR" ? ptBR : enUS;
   const [searchTerm, setSearchTerm] = useState(() => {
@@ -494,7 +496,7 @@ const DeviceList = () => {
             >
               <RefreshCw className="h-4 w-4" />
             </Button>
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            {isModerator && <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button
                   size="sm"
@@ -739,7 +741,7 @@ const DeviceList = () => {
                   </Button>
                 </form>
               </DialogContent>
-            </Dialog>
+            </Dialog>}
           </div>
         </div>
       </CardHeader>
@@ -824,7 +826,7 @@ const DeviceList = () => {
           </div>
 
           {/* Bulk actions bar */}
-          {selectedDevices.size > 0 && (
+          {selectedDevices.size > 0 && isModerator && (
             <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
               <span className="text-sm font-medium">
                 {t("bulk.selected", { count: selectedDevices.size })}
@@ -962,7 +964,7 @@ const DeviceList = () => {
                         >
                           <History className="h-4 w-4" />
                         </Button>
-                        <Button
+                        {isModerator && <Button
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-blue-500 hover:text-blue-400 hover:bg-blue-500/10"
@@ -970,7 +972,7 @@ const DeviceList = () => {
                           title={t("tooltips.edit")}
                         >
                           <Pencil className="h-4 w-4" />
-                        </Button>
+                        </Button>}
                         <Button
                           variant="ghost"
                           size="icon"

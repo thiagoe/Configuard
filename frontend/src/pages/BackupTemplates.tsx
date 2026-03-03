@@ -619,27 +619,31 @@ const BackupTemplates = () => {
             <p className="text-muted-foreground">{t("subtitle")}</p>
           </div>
           <div className="flex gap-2 flex-wrap">
-            <input
-              type="file"
-              accept=".yaml,.yml,.json"
-              onChange={handleImportTemplates}
-              className="hidden"
-              id="import-templates-input"
-            />
-            <Button variant="outline" onClick={() => document.getElementById("import-templates-input")?.click()}>
-              <Upload className="h-4 w-4 mr-2" />
-              {tc("import")}
-            </Button>
+            {isModerator && <>
+              <input
+                type="file"
+                accept=".yaml,.yml,.json"
+                onChange={handleImportTemplates}
+                className="hidden"
+                id="import-templates-input"
+              />
+              <Button variant="outline" onClick={() => document.getElementById("import-templates-input")?.click()}>
+                <Upload className="h-4 w-4 mr-2" />
+                {tc("import")}
+              </Button>
+            </>}
             {templates.length > 0 && (
               <Button variant="outline" onClick={handleExportAllTemplates}>
                 <Download className="h-4 w-4 mr-2" />
                 {tc("exportAll")}
               </Button>
             )}
-            <Button onClick={() => openDialog()}>
-              <Plus className="h-4 w-4 mr-2" />
-              {t("create")}
-            </Button>
+            {isModerator && (
+              <Button onClick={() => openDialog()}>
+                <Plus className="h-4 w-4 mr-2" />
+                {t("create")}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -654,7 +658,7 @@ const BackupTemplates = () => {
                     : t("total", { count: templates.length })}
                 </CardDescription>
               </div>
-              {selectedTemplates.size > 0 && (
+              {selectedTemplates.size > 0 && isModerator && (
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">
                     {selectedTemplates.size} {tc("selected")}
@@ -697,10 +701,12 @@ const BackupTemplates = () => {
               <div className="text-center py-8">
                 <Terminal className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <p className="text-muted-foreground mb-4">{t("none")}</p>
-                <Button variant="outline" onClick={() => openDialog()}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  {t("create")}
-                </Button>
+                {isModerator && (
+                  <Button variant="outline" onClick={() => openDialog()}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    {t("create")}
+                  </Button>
+                )}
               </div>
             ) : filteredTemplates.length === 0 ? (
               <div className="text-center py-8">
@@ -754,9 +760,11 @@ const BackupTemplates = () => {
                         <Button variant="ghost" size="sm" onClick={() => openPreview(template)} title={tc("view")}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => openDialog(template)} title={tc("edit")}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
+                        {isModerator && (
+                          <Button variant="ghost" size="sm" onClick={() => openDialog(template)} title={tc("edit")}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

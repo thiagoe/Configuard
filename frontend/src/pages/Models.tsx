@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { DeviceModel, DeviceModelCreate } from "@/services/deviceModels";
 import { useDeviceModels, useCreateDeviceModel, useUpdateDeviceModel, useDeleteDeviceModel } from "@/hooks/useDeviceModels";
@@ -133,7 +134,7 @@ const Models = () => {
             </h1>
             <p className="text-muted-foreground">{t("models.subtitle")}</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          {isModerator && <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={() => openDialog()}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -217,7 +218,7 @@ const Models = () => {
                 </Button>
               </form>
             </DialogContent>
-          </Dialog>
+          </Dialog>}
         </div>
 
         <Card>
@@ -306,21 +307,23 @@ const Models = () => {
                         {model.description || "-"}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openDialog(model)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(model.id)}
-                          disabled={deleteMutation.isPending}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {isModerator && <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openDialog(model)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(model.id)}
+                            disabled={deleteMutation.isPending}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>}
                       </TableCell>
                     </TableRow>
                   ))}

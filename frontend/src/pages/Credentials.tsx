@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useCreateCredential, useCredentials, useDeleteCredential, useUpdateCredential } from "@/hooks/useCredentials";
 import { Credential, CredentialCreate, CredentialUpdate } from "@/services/credentials";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -136,7 +137,7 @@ const Credentials = () => {
             <h1 className="text-3xl font-bold">{t("credentials.title")}</h1>
             <p className="text-muted-foreground">{t("credentials.subtitle")}</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          {isModerator && <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={() => openDialog()}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -266,7 +267,7 @@ const Credentials = () => {
                 </Button>
               </form>
             </DialogContent>
-          </Dialog>
+          </Dialog>}
         </div>
 
         <Card>
@@ -317,14 +318,14 @@ const Credentials = () => {
                           {credential.description || "-"}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
+                          {isModerator && <div className="flex justify-end gap-2">
                             <Button variant="ghost" size="sm" onClick={() => openDialog(credential)}>
                               <Pencil className="h-4 w-4" />
                             </Button>
                             <Button variant="ghost" size="sm" onClick={() => handleDelete(credential.id)}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
-                          </div>
+                          </div>}
                         </TableCell>
                       </TableRow>
                     ))}

@@ -15,6 +15,8 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isAdmin: boolean;
+  isModerator: boolean;
   locale: string;
   changeLocale: (lang: string) => void;
   login: (email: string, password: string) => Promise<void>;
@@ -113,6 +115,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     isLoading,
     isAuthenticated: !!user,
+    isAdmin: user?.role === 'admin',
+    isModerator: user?.role === 'admin' || user?.role === 'moderator',
     locale,
     changeLocale,
     login,
