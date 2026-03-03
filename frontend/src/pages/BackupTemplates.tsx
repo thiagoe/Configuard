@@ -20,6 +20,7 @@ import { Plus, Pencil, Trash2, Settings2, Terminal, ListOrdered, Eye, Upload, Do
 import TemplateStepEditor, { type TemplateStep } from "@/components/templates/TemplateStepEditor";
 import TemplateAdvancedSettings, { type TemplateAdvancedConfig } from "@/components/templates/TemplateAdvancedSettings";
 import { type TemplateStepCreate } from "@/services/templates";
+import { useAuth } from "@/contexts/AuthContext";
 
 const TEMPLATE_SEARCH_KEY = "configuard_template_search";
 

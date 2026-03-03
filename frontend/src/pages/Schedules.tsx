@@ -16,6 +16,7 @@ import { getSchedules, updateSchedule, deleteSchedule, createSchedule, Schedule,
 import { useDevices } from "@/hooks/useDevices";
 import { useCategories } from "@/hooks/useCategories";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Schedules = () => {
   const { isModerator } = useAuth();
