@@ -1,0 +1,21 @@
+version: "1.0"
+exported_at: "2026-03-03T12:04:07.828Z"
+template:
+  name: HUAWEI-NE8K
+  description: NE40 e NE8k
+  use_steps: false
+  commands: display current-configuration all
+  prompt_pattern: "#|>|\\$"
+  login_prompt: "Username:|Login:"
+  password_prompt: "Password:"
+  enable_prompt: null
+  enable_password_required: false
+  connection_timeout: 30
+  command_timeout: 180
+  pagination_pattern: null
+  pagination_key: null
+  pre_commands: screen-length 0 temporary
+  post_commands: null
+  output_cleanup_patterns: null
+  error_patterns: null
+  line_ending: \n

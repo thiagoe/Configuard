@@ -1,0 +1,72 @@
+version: "1.0"
+exported_at: "2026-03-03T12:04:23.892Z"
+template:
+  name: OLT-Huawei
+  description: OLT HUAWEI
+  use_steps: true
+  commands: null
+  prompt_pattern: CLV.GO[>#]
+  login_prompt: ">>User name:"
+  password_prompt: ">>User password:"
+  enable_prompt: null
+  enable_password_required: false
+  connection_timeout: 30
+  command_timeout: 60
+  pagination_pattern: null
+  pagination_key: null
+  pre_commands: null
+  post_commands: null
+  output_cleanup_patterns: null
+  error_patterns: null
+  line_ending: \n
+  steps:
+    - order: 1
+      step_type: command
+      content: enable
+      timeout: 30
+      expect_pattern: null
+      on_failure: stop
+      max_retries: 0
+      condition: null
+      capture_output: false
+      variable_name: null
+    - order: 2
+      step_type: command
+      content: display current-configuration | no-more
+      timeout: 10
+      expect_pattern: <cr>
+      on_failure: stop
+      max_retries: 0
+      condition: null
+      capture_output: false
+      variable_name: null
+    - order: 3
+      step_type: send_key
+      content: enter
+      timeout: 2
+      expect_pattern: null
+      on_failure: stop
+      max_retries: 0
+      condition: null
+      capture_output: false
+      variable_name: null
+    - order: 4
+      step_type: send_key
+      content: enter
+      timeout: 2
+      expect_pattern: null
+      on_failure: stop
+      max_retries: 0
+      condition: null
+      capture_output: false
+      variable_name: null
+    - order: 5
+      step_type: expect
+      content: CLV\.GO[>#]
+      timeout: 300
+      expect_pattern: CLV\.GO[>#]
+      on_failure: stop
+      max_retries: 0
+      condition: null
+      capture_output: true
+      variable_name: null

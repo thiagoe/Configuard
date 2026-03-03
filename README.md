@@ -321,6 +321,29 @@ All protected endpoints require `Authorization: Bearer <access_token>`.
 
 ---
 
+## Sample templates
+
+The `templates/` directory contains ready-to-use backup templates that can be imported directly in the **Backup Templates** page.
+
+| File | Device |
+| --- | --- |
+| `template-cisco.yaml` | Cisco |
+| `template-mikrotik-routeros---full-backup.yaml` | MikroTik RouterOS |
+| `template-mk_v2_1.yaml` | MikroTik (v2) |
+| `template-huawei-ne8k.yaml` | Huawei NE8K |
+| `template-huawei-sw-6730.yaml` | Huawei SW-6730 |
+| `template-olt-huawei.yaml` | OLT Huawei |
+| `template-olts-zte.yaml` | OLT ZTE |
+| `template-olts-zte-titan.yaml` | OLT ZTE Titan |
+| `template-hillstone.yaml` | Hillstone |
+| `template-a10-th1040.yaml` | A10 TH1040 |
+| `template-sw-datacom.yaml` | Switch Datacom |
+| `template-sw-tp-link.yaml` | Switch TP-Link |
+
+To import: go to **Backup Templates → Import** and select the desired file.
+
+---
+
 ## Contributing
 
 Bug reports and feature requests are welcome via [Issues](../../issues).
@@ -347,6 +370,7 @@ O Configuard é uma aplicação web auto-hospedada para gerenciamento centraliza
 - [Busca](#busca)
 - [Referência dos scripts](#referência-dos-scripts)
 - [API](#api-1)
+- [Templates de exemplo](#templates-de-exemplo)
 - [Segurança](#segurança)
 - [Contribuindo](#contribuindo)
 
@@ -600,6 +624,29 @@ Documentação interativa da API:
 - **ReDoc:** `http://localhost:8000/api/redoc`
 
 Todos os endpoints protegidos exigem `Authorization: Bearer <access_token>`.
+
+---
+
+### Templates de exemplo
+
+O diretório `templates/` contém templates de backup prontos para uso, importáveis diretamente na página **Templates de Backup**.
+
+| Arquivo | Dispositivo |
+| --- | --- |
+| `template-cisco.yaml` | Cisco |
+| `template-mikrotik-routeros---full-backup.yaml` | MikroTik RouterOS |
+| `template-mk_v2_1.yaml` | MikroTik (v2) |
+| `template-huawei-ne8k.yaml` | Huawei NE8K |
+| `template-huawei-sw-6730.yaml` | Huawei SW-6730 |
+| `template-olt-huawei.yaml` | OLT Huawei |
+| `template-olts-zte.yaml` | OLT ZTE |
+| `template-olts-zte-titan.yaml` | OLT ZTE Titan |
+| `template-hillstone.yaml` | Hillstone |
+| `template-a10-th1040.yaml` | A10 TH1040 |
+| `template-sw-datacom.yaml` | Switch Datacom |
+| `template-sw-tp-link.yaml` | Switch TP-Link |
+
+Para importar: acesse **Templates de Backup → Importar** e selecione o arquivo desejado.
 
 ---
 

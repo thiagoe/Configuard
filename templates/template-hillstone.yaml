@@ -1,0 +1,21 @@
+version: "1.0"
+exported_at: "2026-03-03T12:04:09.812Z"
+template:
+  name: Hillstone
+  description: null
+  use_steps: false
+  commands: show configuration
+  prompt_pattern: "[A-Za-z0-9_\\-]+[#>]\\s*$"
+  login_prompt: "Username:|Login:"
+  password_prompt: "Password:"
+  enable_prompt: null
+  enable_password_required: false
+  connection_timeout: 300
+  command_timeout: 300
+  pagination_pattern: "--More--|<--- More --->| --More-- "
+  pagination_key: " "
+  pre_commands: null
+  post_commands: null
+  output_cleanup_patterns: null
+  error_patterns: null
+  line_ending: \n

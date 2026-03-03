@@ -1,0 +1,27 @@
+version: "1.0"
+exported_at: "2026-03-03T12:04:14.940Z"
+template:
+  name: MK_V2_1
+  description: MikroTik RouterOS backup (CRLF, no pagination)
+  use_steps: false
+  commands: /export
+  prompt_pattern: \[[^\]]+\]\s*\*?>\s*$
+  login_prompt: "Username:|Login:"
+  password_prompt: "Password:"
+  enable_prompt: null
+  enable_password_required: false
+  connection_timeout: 30
+  command_timeout: 300
+  pagination_pattern: "-- \\[Q quit\\|"
+  pagination_key: " "
+  pre_commands: /system console disable-status-printing
+  post_commands: null
+  output_cleanup_patterns: |-
+    ^\[.*@.*\]\s*>.*$
+    ^#\s+\w{3}/\d{1,2}/\d{4}.*by\s+RouterOS
+    ^#\s+software\s+id\s*=
+    ^#\s+model\s*=
+    ^#\s+serial\s+number\s*=
+    ^#\s*$
+  error_patterns: null
+  line_ending: \r\n

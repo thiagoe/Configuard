@@ -1,0 +1,21 @@
+version: "1.0"
+exported_at: "2026-03-03T12:04:37.038Z"
+template:
+  name: SW-TP-Link
+  description: null
+  use_steps: false
+  commands: "show running-config all "
+  prompt_pattern: \w[>#]\s*$
+  login_prompt: "User:"
+  password_prompt: "Password:"
+  enable_prompt: "Password:"
+  enable_password_required: false
+  connection_timeout: 60
+  command_timeout: 60
+  pagination_pattern: null
+  pagination_key: null
+  pre_commands: terminal length 0
+  post_commands: null
+  output_cleanup_patterns: null
+  error_patterns: null
+  line_ending: \n

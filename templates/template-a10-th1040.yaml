@@ -1,0 +1,42 @@
+version: "1.0"
+exported_at: "2026-03-03T12:04:00.908Z"
+template:
+  name: A10-TH1040
+  description: TH1040
+  use_steps: true
+  commands: null
+  prompt_pattern: "#|>|\\$"
+  login_prompt: "Username:|Login:"
+  password_prompt: "Password:"
+  enable_prompt: null
+  enable_password_required: false
+  connection_timeout: 30
+  command_timeout: 60
+  pagination_pattern: "--MORE--"
+  pagination_key: " "
+  pre_commands: null
+  post_commands: null
+  output_cleanup_patterns: "^!Current configuration: \\d+ bytes$|!Configuration last (updated|saved) at .*|!.*version .*, build .*"
+  error_patterns: null
+  line_ending: \n
+  steps:
+    - order: 1
+      step_type: expect
+      content: "#|>|\\$"
+      timeout: 30
+      expect_pattern: "#|>|\\$"
+      on_failure: continue
+      max_retries: 0
+      condition: null
+      capture_output: false
+      variable_name: null
+    - order: 2
+      step_type: command
+      content: show startup-config
+      timeout: 30
+      expect_pattern: null
+      on_failure: continue
+      max_retries: 0
+      condition: null
+      capture_output: true
+      variable_name: null
