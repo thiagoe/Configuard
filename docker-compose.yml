@@ -53,8 +53,6 @@ services:
     restart: unless-stopped
     ports:
       - "${FRONTEND_PORT:-8008}:80"
-    volumes:
-      - ./frontend/dist:/usr/share/nginx/html  # build estático mapeado
     depends_on:
       - backend
     networks:
