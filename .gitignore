@@ -76,6 +76,7 @@ secrets/
 
 # Claude Code
 .claude/
+CLAUDE.md
 
 # Lock files (optional — uncomment if you don't want to commit them)
 # bun.lockb
