@@ -102,15 +102,19 @@ const DeviceList = () => {
   });
   const [globalRetention, setGlobalRetention] = useState(10);
 
-  // Fetch brands, categories, credentials, templates
+  // Auxiliary lists — loaded lazily when dialog opens, cached for 10 min (rarely change)
   const { data: brands = [] } = useQuery({
     queryKey: ["brands"],
     queryFn: getBrands,
+    staleTime: 10 * 60 * 1000,
+    enabled: dialogOpen || editDialogOpen,
   });
 
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
     queryFn: getCategories,
+    staleTime: 10 * 60 * 1000,
+    enabled: dialogOpen || editDialogOpen,
   });
 
   const { data: credentials = [] } = useCredentials();
@@ -118,17 +122,22 @@ const DeviceList = () => {
   const { data: templates = [] } = useQuery({
     queryKey: ["templates"],
     queryFn: getTemplates,
+    staleTime: 10 * 60 * 1000,
+    enabled: dialogOpen || editDialogOpen,
   });
 
   const { data: deviceModels = [] } = useQuery({
     queryKey: ["device-models"],
     queryFn: () => getDeviceModels(),
+    staleTime: 10 * 60 * 1000,
+    enabled: dialogOpen || editDialogOpen,
   });
 
   // Load global retention setting
   const { data: systemSettings } = useQuery({
     queryKey: ["system-settings"],
     queryFn: getSystemSettings,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Update global retention when settings load

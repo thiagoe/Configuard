@@ -7,7 +7,7 @@ from math import ceil
 
 from fastapi import APIRouter, HTTPException, status, Query
 from sqlalchemy.orm import joinedload
-from sqlalchemy import func
+from sqlalchemy import func, case
 
 from app.core.deps import CurrentUser, DbSession
 from app.models.backup_execution import BackupExecution
@@ -90,36 +90,32 @@ async def get_backup_execution_stats(
     from datetime import timedelta
     from app.core.timezone import now
 
-    query = db.query(BackupExecution).join(Device)
-
+    filters = []
     if device_id:
-        query = query.filter(BackupExecution.device_id == device_id)
-
+        filters.append(BackupExecution.device_id == device_id)
     if days:
         cutoff = now() - timedelta(days=days)
-        query = query.filter(BackupExecution.started_at >= cutoff)
+        filters.append(BackupExecution.started_at >= cutoff)
 
-    total_executions = query.count()
-    successful_executions = query.filter(BackupExecution.status == "success").count()
-    failed_executions = query.filter(BackupExecution.status == "failed").count()
+    # Single aggregation query — replaces 6 separate count() calls
+    row = db.query(
+        func.count().label("total"),
+        func.sum(case((BackupExecution.status == "success", 1), else_=0)).label("successful"),
+        func.sum(case((BackupExecution.status == "failed", 1), else_=0)).label("failed"),
+        func.sum(case(
+            (BackupExecution.status == "success", case((BackupExecution.config_changed == True, 1), else_=0)),
+            else_=0
+        )).label("changed"),
+    ).filter(*filters).one()
 
-    # For change statistics, only count successful backups
-    success_query = db.query(BackupExecution).join(Device).filter(
-        BackupExecution.status == "success",
-    )
-
-    if device_id:
-        success_query = success_query.filter(BackupExecution.device_id == device_id)
-
-    if days:
-        success_query = success_query.filter(BackupExecution.started_at >= cutoff)
-
-    total_successful = success_query.count()
-    configs_with_changes = success_query.filter(BackupExecution.config_changed == True).count()
-    configs_without_changes = total_successful - configs_with_changes
+    total_executions = row.total or 0
+    successful_executions = int(row.successful or 0)
+    failed_executions = int(row.failed or 0)
+    configs_with_changes = int(row.changed or 0)
+    configs_without_changes = successful_executions - configs_with_changes
 
     success_rate = (successful_executions / total_executions * 100) if total_executions > 0 else 0.0
-    change_rate = (configs_with_changes / total_successful * 100) if total_successful > 0 else 0.0
+    change_rate = (configs_with_changes / successful_executions * 100) if successful_executions > 0 else 0.0
 
     return BackupExecutionStatsResponse(
         total_executions=total_executions,

@@ -67,20 +67,12 @@ def init_db() -> None:
         raise
 
 
-# Event listeners for connection pool monitoring
+# Event listeners for connection pool monitoring (errors only — no per-request noise)
 @event.listens_for(engine, "connect")
 def on_connect(dbapi_conn, connection_record):
-    """Log when a new connection is created"""
     logger.debug("New database connection created")
 
 
-@event.listens_for(engine, "checkout")
-def on_checkout(dbapi_conn, connection_record, connection_proxy):
-    """Log when a connection is checked out from the pool"""
-    logger.debug("Database connection checked out from pool")
-
-
-@event.listens_for(engine, "checkin")
-def on_checkin(dbapi_conn, connection_record):
-    """Log when a connection is returned to the pool"""
-    logger.debug("Database connection returned to pool")
+@event.listens_for(engine, "invalidate")
+def on_invalidate(dbapi_conn, connection_record, exception):
+    logger.warning("Database connection invalidated", error=str(exception) if exception else "unknown")

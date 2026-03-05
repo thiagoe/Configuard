@@ -20,24 +20,31 @@ const Dashboard = () => {
   const { data: schedules = [] } = useQuery({
     queryKey: ["schedules"],
     queryFn: getSchedules,
+    staleTime: 5 * 60 * 1000, // schedules rarely change — cache 5 min
   });
 
   // Fetch backup execution statistics (last 7 days)
   const { data: execStats } = useQuery({
     queryKey: ["backup-execution-stats"],
     queryFn: () => getBackupExecutionStats({ days: 7 }),
+    staleTime: 60 * 1000, // stats: refresh every 1 min
+    refetchInterval: 60 * 1000,
   });
 
   // Fetch recent backup executions
   const { data: recentExecutions, isLoading: executionsLoading } = useQuery({
     queryKey: ["backup-executions-recent"],
     queryFn: () => getBackupExecutions({ page: 1, page_size: 10 }),
+    staleTime: 30 * 1000, // executions: refresh every 30s
+    refetchInterval: 30 * 1000,
   });
 
   // Fetch recent failed executions separately for alerts
   const { data: failedExecutions } = useQuery({
     queryKey: ["backup-executions-failed"],
     queryFn: () => getBackupExecutions({ page: 1, page_size: 10, status: "failed" }),
+    staleTime: 30 * 1000,
+    refetchInterval: 30 * 1000,
   });
 
   const devices = devicesData?.items || [];

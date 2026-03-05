@@ -243,10 +243,17 @@ CREATE TABLE IF NOT EXISTS devices (
     CONSTRAINT fk_devices_template FOREIGN KEY (backup_template_id) REFERENCES backup_templates(id)  ON DELETE SET NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_devices_user   ON devices(user_id);
-CREATE INDEX IF NOT EXISTS idx_devices_status ON devices(status);
-CREATE INDEX IF NOT EXISTS idx_devices_ip     ON devices(ip_address);
-CREATE INDEX IF NOT EXISTS idx_devices_model  ON devices(model_id);
+CREATE INDEX IF NOT EXISTS idx_devices_user              ON devices(user_id);
+CREATE INDEX IF NOT EXISTS idx_devices_status            ON devices(status);
+CREATE INDEX IF NOT EXISTS idx_devices_ip                ON devices(ip_address);
+CREATE INDEX IF NOT EXISTS idx_devices_model             ON devices(model_id);
+CREATE INDEX IF NOT EXISTS idx_devices_credential        ON devices(credential_id);
+CREATE INDEX IF NOT EXISTS idx_devices_brand             ON devices(brand_id);
+CREATE INDEX IF NOT EXISTS idx_devices_category          ON devices(category_id);
+CREATE INDEX IF NOT EXISTS idx_devices_template          ON devices(backup_template_id);
+CREATE INDEX IF NOT EXISTS idx_devices_user_status       ON devices(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_devices_backup_enabled    ON devices(backup_enabled) WHERE backup_enabled = TRUE;
+CREATE INDEX IF NOT EXISTS idx_devices_last_backup       ON devices(last_backup_at DESC NULLS LAST);
 
 -- Configurations table (backup history)
 CREATE TABLE IF NOT EXISTS configurations (
@@ -266,10 +273,11 @@ CREATE TABLE IF NOT EXISTS configurations (
     CONSTRAINT fk_configurations_device FOREIGN KEY (device_id) REFERENCES devices(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_configurations_device    ON configurations(device_id);
-CREATE INDEX IF NOT EXISTS idx_configurations_version   ON configurations(device_id, version);
-CREATE INDEX IF NOT EXISTS idx_configurations_collected ON configurations(collected_at);
-CREATE INDEX IF NOT EXISTS idx_configurations_hash      ON configurations(config_hash);
+CREATE INDEX IF NOT EXISTS idx_configurations_device         ON configurations(device_id);
+CREATE INDEX IF NOT EXISTS idx_configurations_version        ON configurations(device_id, version);
+CREATE INDEX IF NOT EXISTS idx_configurations_device_latest  ON configurations(device_id, collected_at DESC);
+CREATE INDEX IF NOT EXISTS idx_configurations_collected      ON configurations(collected_at);
+CREATE INDEX IF NOT EXISTS idx_configurations_hash           ON configurations(config_hash);
 
 -- Full-Text Search index on config_data using 'simple' dictionary
 -- (no stemming — preserves IP addresses, interface names, vendor-specific tokens)
@@ -296,7 +304,7 @@ CREATE TABLE IF NOT EXISTS backup_schedules (
 );
 
 CREATE INDEX IF NOT EXISTS idx_backup_schedules_user     ON backup_schedules(user_id);
-CREATE INDEX IF NOT EXISTS idx_backup_schedules_active   ON backup_schedules(is_active);
+CREATE INDEX IF NOT EXISTS idx_backup_schedules_active   ON backup_schedules(is_active) WHERE is_active = TRUE;
 CREATE INDEX IF NOT EXISTS idx_backup_schedules_next_run ON backup_schedules(next_run_at);
 
 -- Schedule devices (many-to-many)
@@ -350,8 +358,11 @@ CREATE TABLE IF NOT EXISTS backup_executions (
 CREATE INDEX IF NOT EXISTS idx_backup_exec_device         ON backup_executions(device_id);
 CREATE INDEX IF NOT EXISTS idx_backup_exec_user           ON backup_executions(user_id);
 CREATE INDEX IF NOT EXISTS idx_backup_exec_status         ON backup_executions(status);
-CREATE INDEX IF NOT EXISTS idx_backup_exec_started        ON backup_executions(started_at);
+CREATE INDEX IF NOT EXISTS idx_backup_exec_started        ON backup_executions(started_at DESC);
 CREATE INDEX IF NOT EXISTS idx_backup_exec_device_started ON backup_executions(device_id, started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_backup_exec_user_started   ON backup_executions(user_id, started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_backup_exec_status_started ON backup_executions(status, started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_backup_exec_schedule       ON backup_executions(schedule_id) WHERE schedule_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_backup_exec_config_changed ON backup_executions(config_changed);
 
 -- Audit logs table
