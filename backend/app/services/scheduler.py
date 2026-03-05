@@ -11,6 +11,7 @@ from apscheduler.triggers.cron import CronTrigger
 
 from app.core.database import SessionLocal
 from app.core.logging import get_backup_logger
+from app.core import backup_lock
 from app.models.schedule import BackupSchedule, ScheduleType
 from app.services.backup_executor import execute_backup
 from app.services.email import send_notification
@@ -93,6 +94,16 @@ def _run_schedule(schedule_id: str) -> None:
                     device_name=device.name,
                 )
                 continue
+
+            if not backup_lock.acquire(device.id):
+                backup_logger.warning(
+                    "Skipping device (backup already running)",
+                    schedule_id=schedule_id,
+                    device_id=device.id,
+                    device_name=device.name,
+                )
+                continue
+
             try:
                 execute_backup(db, device, schedule.user_id, scheduled=True, schedule_id=schedule_id)
                 send_notification(db, "backup_success", {"device_name": device.name})
@@ -108,6 +119,8 @@ def _run_schedule(schedule_id: str) -> None:
                     "device_name": device.name,
                     "error": str(exc),
                 })
+            finally:
+                backup_lock.release(device.id)
 
         # Update next_run_at from scheduler
         job = _scheduler.get_job(schedule_id) if _scheduler else None

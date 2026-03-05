@@ -7,7 +7,6 @@ import csv
 import io
 from typing import Optional, List
 from math import ceil
-from threading import Lock
 
 from fastapi import APIRouter, HTTPException, status, Query, Request, File, UploadFile
 from fastapi.responses import StreamingResponse
@@ -17,11 +16,8 @@ from queue import Queue
 from threading import Thread
 from pydantic import BaseModel
 
-# In-memory lock to prevent concurrent backups on the same device
-_running_backups: set = set()
-_running_backups_lock = Lock()
-
 from app.core.deps import CurrentUser, CurrentModerator, DbSession
+from app.core import backup_lock
 from app.models.device import Device
 from app.models.device_model import DeviceModel
 from app.models.brand import Brand
@@ -597,13 +593,11 @@ async def execute_device_backup(
             detail="Device not found",
         )
 
-    with _running_backups_lock:
-        if device_id in _running_backups:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Já existe um backup em execução para este dispositivo",
-            )
-        _running_backups.add(device_id)
+    if not backup_lock.acquire(device_id):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Já existe um backup em execução para este dispositivo",
+        )
 
     try:
         result = execute_backup(db, device, current_user.id)
@@ -623,8 +617,7 @@ async def execute_device_backup(
             detail=str(exc),
         )
     finally:
-        with _running_backups_lock:
-            _running_backups.discard(device_id)
+        backup_lock.release(device_id)
 
     # Return the new configuration if changes detected, otherwise return the latest
     if result.configuration:
@@ -678,13 +671,11 @@ async def stream_device_backup(
             detail="Device not found",
         )
 
-    with _running_backups_lock:
-        if device_id in _running_backups:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Já existe um backup em execução para este dispositivo",
-            )
-        _running_backups.add(device_id)
+    if not backup_lock.acquire(device_id):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Já existe um backup em execução para este dispositivo",
+        )
 
     # Resolve the real user_id from X-User-Id header (set by frontend after login)
     # Falls back to first admin in DB if not provided or not found
@@ -721,8 +712,7 @@ async def stream_device_backup(
             emit("error", {"message": str(exc)})
         finally:
             thread_db.close()
-            with _running_backups_lock:
-                _running_backups.discard(device_id)
+            backup_lock.release(device_id)
             queue.put(None)
 
     Thread(target=run_backup, daemon=True).start()
