@@ -164,11 +164,10 @@ def _get_device_template(db: Session, device: Device) -> BackupTemplate:
 
     template = db.query(BackupTemplate).filter(
         BackupTemplate.id == device.backup_template_id,
-        BackupTemplate.user_id == device.user_id,
     ).first()
 
     if not template:
-        raise BackupError("Backup template not found or access denied")
+        raise BackupError("Backup template not found")
 
     return template
 
@@ -245,7 +244,6 @@ def execute_backup(
     if device.credential_id:
         credential = db.query(Credential).filter(
             Credential.id == device.credential_id,
-            Credential.user_id == device.user_id,
         ).first()
 
     if not credential:

@@ -443,7 +443,7 @@ class SSHClientWrapper:
         start = time.monotonic()
         last_debug = start
         last_recv_time = start  # Track when we last received data
-        idle_threshold = 0.3  # Wait 300ms of no data before checking prompt
+        idle_threshold = 1.0  # Wait 1s of no data before checking prompt
 
         while True:
             if time.monotonic() - start > timeout:
