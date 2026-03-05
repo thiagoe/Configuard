@@ -34,6 +34,12 @@ const Dashboard = () => {
     queryFn: () => getBackupExecutions({ page: 1, page_size: 10 }),
   });
 
+  // Fetch recent failed executions separately for alerts
+  const { data: failedExecutions } = useQuery({
+    queryKey: ["backup-executions-failed"],
+    queryFn: () => getBackupExecutions({ page: 1, page_size: 10, status: "failed" }),
+  });
+
   const devices = devicesData?.items || [];
 
   const stats = useMemo(() => {
@@ -73,20 +79,16 @@ const Dashboard = () => {
   }, [recentExecutions, dateFnsLocale]);
 
   const alerts = useMemo(() => {
-    if (!recentExecutions?.items) return [];
-
-    return recentExecutions.items
-      .filter((exec) => exec.status === "failed" || exec.status === "timeout")
-      .slice(0, 5)
-      .map((exec) => ({
-        id: exec.id,
-        device: exec.device?.name ?? "Device",
-        message: exec.status === "failed" ? t("failed") : t("timeout"),
-        severity: "high",
-        details: exec.error_message,
-        time: exec.started_at ? format(parseISO(exec.started_at), "dd/MM HH:mm", { locale: dateFnsLocale }) : "",
-      }));
-  }, [recentExecutions, t, dateFnsLocale]);
+    const items = failedExecutions?.items ?? [];
+    return items.slice(0, 5).map((exec) => ({
+      id: exec.id,
+      device: exec.device?.name ?? "Device",
+      message: exec.status === "failed" ? t("failed") : t("timeout"),
+      severity: "high",
+      details: exec.error_message,
+      time: exec.started_at ? format(parseISO(exec.started_at), "dd/MM HH:mm", { locale: dateFnsLocale }) : "",
+    }));
+  }, [failedExecutions, t, dateFnsLocale]);
 
   const isLoading = devicesLoading || executionsLoading;
 
