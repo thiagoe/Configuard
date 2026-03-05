@@ -7,6 +7,7 @@ import csv
 import io
 from typing import Optional, List
 from math import ceil
+from threading import Lock
 
 from fastapi import APIRouter, HTTPException, status, Query, Request, File, UploadFile
 from fastapi.responses import StreamingResponse
@@ -15,6 +16,10 @@ import json
 from queue import Queue
 from threading import Thread
 from pydantic import BaseModel
+
+# In-memory lock to prevent concurrent backups on the same device
+_running_backups: set = set()
+_running_backups_lock = Lock()
 
 from app.core.deps import CurrentUser, CurrentModerator, DbSession
 from app.models.device import Device
@@ -592,6 +597,14 @@ async def execute_device_backup(
             detail="Device not found",
         )
 
+    with _running_backups_lock:
+        if device_id in _running_backups:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Já existe um backup em execução para este dispositivo",
+            )
+        _running_backups.add(device_id)
+
     try:
         result = execute_backup(db, device, current_user.id)
     except BackupError as exc:
@@ -609,6 +622,9 @@ async def execute_device_backup(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(exc),
         )
+    finally:
+        with _running_backups_lock:
+            _running_backups.discard(device_id)
 
     # Return the new configuration if changes detected, otherwise return the latest
     if result.configuration:
@@ -662,6 +678,14 @@ async def stream_device_backup(
             detail="Device not found",
         )
 
+    with _running_backups_lock:
+        if device_id in _running_backups:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Já existe um backup em execução para este dispositivo",
+            )
+        _running_backups.add(device_id)
+
     # Resolve the real user_id from X-User-Id header (set by frontend after login)
     # Falls back to first admin in DB if not provided or not found
     from app.core.deps import _resolve_user
@@ -697,6 +721,8 @@ async def stream_device_backup(
             emit("error", {"message": str(exc)})
         finally:
             thread_db.close()
+            with _running_backups_lock:
+                _running_backups.discard(device_id)
             queue.put(None)
 
     Thread(target=run_backup, daemon=True).start()
