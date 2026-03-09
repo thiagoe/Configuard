@@ -86,12 +86,14 @@ def _run_schedule(schedule_id: str) -> None:
         )
 
         for device in devices_to_backup:
-            if not device.backup_enabled:
+            if not device.backup_enabled or device.status != "active":
                 backup_logger.debug(
-                    "Skipping device (backup disabled)",
+                    "Skipping device (backup disabled or device inactive)",
                     schedule_id=schedule_id,
                     device_id=device.id,
                     device_name=device.name,
+                    backup_enabled=device.backup_enabled,
+                    device_status=device.status,
                 )
                 continue
 
