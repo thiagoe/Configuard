@@ -88,7 +88,8 @@
     "brand": "Marca",
     "category": "Categoria",
     "model": "Modelo",
-    "status": "Status"
+    "status": "Status",
+    "clear": "Limpar filtros"
   },
   "status": {
     "active": "Ativo",

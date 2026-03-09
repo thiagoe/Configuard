@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Server, Search, RefreshCw, History, Power, FileText, Play, Pencil, PowerOff, Loader2, Trash2, Archive, Copy } from "lucide-react";
+import { Plus, Server, Search, RefreshCw, History, Power, FileText, Play, Pencil, PowerOff, Loader2, Trash2, Archive, Copy, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { getSystemSettings } from "@/services/admin";
@@ -46,6 +46,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 
 const DEVICE_SEARCH_KEY = "configuard_device_search";
+const DEVICE_FILTERS_KEY = "configuard_device_filters";
 
 const DeviceList = () => {
   const navigate = useNavigate();
@@ -56,10 +57,18 @@ const DeviceList = () => {
   const [searchTerm, setSearchTerm] = useState(() => {
     return localStorage.getItem(DEVICE_SEARCH_KEY) || "";
   });
-  const [brandFilter, setBrandFilter] = useState<string>("all");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [modelFilter, setModelFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [brandFilter, setBrandFilter] = useState<string>(() => {
+    try { return JSON.parse(localStorage.getItem(DEVICE_FILTERS_KEY) || "{}").brand || "all"; } catch { return "all"; }
+  });
+  const [categoryFilter, setCategoryFilter] = useState<string>(() => {
+    try { return JSON.parse(localStorage.getItem(DEVICE_FILTERS_KEY) || "{}").category || "all"; } catch { return "all"; }
+  });
+  const [modelFilter, setModelFilter] = useState<string>(() => {
+    try { return JSON.parse(localStorage.getItem(DEVICE_FILTERS_KEY) || "{}").model || "all"; } catch { return "all"; }
+  });
+  const [statusFilter, setStatusFilter] = useState<string>(() => {
+    try { return JSON.parse(localStorage.getItem(DEVICE_FILTERS_KEY) || "{}").status || "all"; } catch { return "all"; }
+  });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingDevice, setEditingDevice] = useState<any>(null);
@@ -102,19 +111,17 @@ const DeviceList = () => {
   });
   const [globalRetention, setGlobalRetention] = useState(10);
 
-  // Auxiliary lists — loaded lazily when dialog opens, cached for 10 min (rarely change)
+  // Auxiliary lists — brands, categories, models always loaded (used in filters too)
   const { data: brands = [] } = useQuery({
     queryKey: ["brands"],
     queryFn: getBrands,
     staleTime: 10 * 60 * 1000,
-    enabled: dialogOpen || editDialogOpen,
   });
 
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
     queryFn: getCategories,
     staleTime: 10 * 60 * 1000,
-    enabled: dialogOpen || editDialogOpen,
   });
 
   const { data: credentials = [] } = useCredentials();
@@ -130,7 +137,6 @@ const DeviceList = () => {
     queryKey: ["device-models"],
     queryFn: () => getDeviceModels(),
     staleTime: 10 * 60 * 1000,
-    enabled: dialogOpen || editDialogOpen,
   });
 
   // Load global retention setting
@@ -155,6 +161,29 @@ const DeviceList = () => {
       localStorage.removeItem(DEVICE_SEARCH_KEY);
     }
   }, [searchTerm]);
+
+  // Persist select filters in localStorage
+  useEffect(() => {
+    const filters = { brand: brandFilter, category: categoryFilter, model: modelFilter, status: statusFilter };
+    const hasActive = Object.values(filters).some(v => v !== "all");
+    if (hasActive) {
+      localStorage.setItem(DEVICE_FILTERS_KEY, JSON.stringify(filters));
+    } else {
+      localStorage.removeItem(DEVICE_FILTERS_KEY);
+    }
+  }, [brandFilter, categoryFilter, modelFilter, statusFilter]);
+
+  const hasActiveFilters = searchTerm || brandFilter !== "all" || categoryFilter !== "all" || modelFilter !== "all" || statusFilter !== "all";
+
+  const clearAllFilters = () => {
+    setSearchTerm("");
+    setBrandFilter("all");
+    setCategoryFilter("all");
+    setModelFilter("all");
+    setStatusFilter("all");
+    localStorage.removeItem(DEVICE_SEARCH_KEY);
+    localStorage.removeItem(DEVICE_FILTERS_KEY);
+  };
 
   // Fetch devices
   const { data: devicesData, isLoading, refetch } = useDevices({
@@ -750,72 +779,87 @@ const DeviceList = () => {
             />
           </div>
 
-          <div className="grid grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="brand-filter">{t("filters.brand")}</Label>
-              <Select value={brandFilter} onValueChange={setBrandFilter}>
-                <SelectTrigger id="brand-filter">
-                  <SelectValue placeholder={t("filters.allBrands")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("filters.allBrands")}</SelectItem>
-                  {brands.map((brand) => (
-                    <SelectItem key={brand.id} value={brand.id}>
-                      {brand.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="flex items-end gap-4">
+            <div className="flex-1 grid grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="brand-filter">{t("filters.brand")}</Label>
+                <Select value={brandFilter} onValueChange={setBrandFilter}>
+                  <SelectTrigger id="brand-filter">
+                    <SelectValue placeholder={t("filters.allBrands")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("filters.allBrands")}</SelectItem>
+                    {brands.map((brand) => (
+                      <SelectItem key={brand.id} value={brand.id}>
+                        {brand.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="category-filter">{t("filters.category")}</Label>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger id="category-filter">
+                    <SelectValue placeholder={t("filters.allCategories")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("filters.allCategories")}</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="model-filter">{t("filters.model")}</Label>
+                <Select value={modelFilter} onValueChange={setModelFilter}>
+                  <SelectTrigger id="model-filter">
+                    <SelectValue placeholder={t("filters.allModels")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("filters.allModels")}</SelectItem>
+                    {deviceModels.map((model) => (
+                      <SelectItem key={model.id} value={model.id}>
+                        {model.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status-filter">{t("filters.status")}</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger id="status-filter">
+                    <SelectValue placeholder={t("filters.allStatuses")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("filters.allStatuses")}</SelectItem>
+                    <SelectItem value="active">{t("status.active")}</SelectItem>
+                    <SelectItem value="inactive">{t("status.inactive")}</SelectItem>
+                    <SelectItem value="maintenance">{t("status.maintenance")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="category-filter">{t("filters.category")}</Label>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger id="category-filter">
-                  <SelectValue placeholder={t("filters.allCategories")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("filters.allCategories")}</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="model-filter">{t("filters.model")}</Label>
-              <Select value={modelFilter} onValueChange={setModelFilter}>
-                <SelectTrigger id="model-filter">
-                  <SelectValue placeholder={t("filters.allModels")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("filters.allModels")}</SelectItem>
-                  {deviceModels.map((model) => (
-                    <SelectItem key={model.id} value={model.id}>
-                      {model.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status-filter">{t("filters.status")}</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger id="status-filter">
-                  <SelectValue placeholder={t("filters.allStatuses")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t("filters.allStatuses")}</SelectItem>
-                  <SelectItem value="active">{t("status.active")}</SelectItem>
-                  <SelectItem value="inactive">{t("status.inactive")}</SelectItem>
-                  <SelectItem value="maintenance">{t("status.maintenance")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearAllFilters}
+                className="text-muted-foreground hover:text-foreground shrink-0 h-10"
+                title={t("filters.clear")}
+              >
+                <X className="h-4 w-4 mr-1" />
+                {t("filters.clear")}
+              </Button>
+            )}
           </div>
 
           {/* Bulk actions bar */}
