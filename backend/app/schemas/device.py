@@ -44,7 +44,6 @@ class DeviceBase(BaseModel):
     credential_id: Optional[str] = None
     backup_template_id: Optional[str] = None
     status: DeviceStatusEnum = "active"
-    backup_enabled: bool = True
     custom_retention: bool = False
     retention_versions: Optional[int] = Field(None, ge=1, le=1000)
     notes: Optional[str] = None
@@ -67,7 +66,6 @@ class DeviceUpdate(BaseModel):
     credential_id: Optional[str] = None
     backup_template_id: Optional[str] = None
     status: Optional[DeviceStatusEnum] = None
-    backup_enabled: Optional[bool] = None
     custom_retention: Optional[bool] = None
     retention_versions: Optional[int] = Field(None, ge=1, le=1000)
     notes: Optional[str] = None

@@ -44,7 +44,6 @@ export interface DeviceUpdate {
   retention_versions?: number | null;
   notes?: string;
   status?: string;
-  backup_enabled?: boolean;
 }
 
 export interface DeviceListResponse {
@@ -118,14 +117,6 @@ export async function updateDevice(id: string, data: DeviceUpdate): Promise<Devi
 // Delete device
 export async function deleteDevice(id: string): Promise<void> {
   await api.delete(`/devices/${id}`);
-}
-
-// Toggle backup enabled
-export async function toggleDeviceBackup(id: string, enabled: boolean): Promise<Device> {
-  console.log(`[toggleDeviceBackup] Setting device ${id} backup_enabled to ${enabled}`);
-  const response = await api.patch<Device>(`/devices/${id}`, { backup_enabled: enabled });
-  console.log(`[toggleDeviceBackup] Response backup_enabled:`, response.data.backup_enabled);
-  return response.data;
 }
 
 // Execute backup now

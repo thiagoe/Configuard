@@ -221,7 +221,6 @@ CREATE TABLE IF NOT EXISTS devices (
     model_id           VARCHAR(36),
     credential_id      VARCHAR(36),
     backup_template_id VARCHAR(36),
-    backup_enabled     BOOLEAN DEFAULT TRUE NOT NULL,
     status             device_status_enum DEFAULT 'active',
     notes              TEXT,
     location           VARCHAR(255),
@@ -252,7 +251,6 @@ CREATE INDEX IF NOT EXISTS idx_devices_brand             ON devices(brand_id);
 CREATE INDEX IF NOT EXISTS idx_devices_category          ON devices(category_id);
 CREATE INDEX IF NOT EXISTS idx_devices_template          ON devices(backup_template_id);
 CREATE INDEX IF NOT EXISTS idx_devices_user_status       ON devices(user_id, status);
-CREATE INDEX IF NOT EXISTS idx_devices_backup_enabled    ON devices(backup_enabled) WHERE backup_enabled = TRUE;
 CREATE INDEX IF NOT EXISTS idx_devices_last_backup       ON devices(last_backup_at DESC NULLS LAST);
 
 -- Configurations table (backup history)

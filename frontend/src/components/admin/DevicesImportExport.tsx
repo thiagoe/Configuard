@@ -19,7 +19,6 @@ interface CsvRow {
   model_name?: string;
   credential_name?: string;
   status?: string;
-  backup_enabled?: string;
   notes?: string;
   [key: string]: string | undefined;
 }

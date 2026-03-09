@@ -5,7 +5,6 @@ import {
   createDevice,
   updateDevice,
   deleteDevice,
-  toggleDeviceBackup,
   executeDeviceBackup,
   DeviceCreate,
   DeviceUpdate,
@@ -45,14 +44,6 @@ export const useDeleteDevice = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteDevice(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["devices"] }),
-  });
-};
-
-export const useToggleDeviceBackup = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) => toggleDeviceBackup(id, enabled),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["devices"] }),
   });
 };

@@ -14,9 +14,6 @@ CREATE INDEX IF NOT EXISTS idx_devices_template       ON devices(backup_template
 -- Composite: filtro comum user + status
 CREATE INDEX IF NOT EXISTS idx_devices_user_status    ON devices(user_id, status);
 
--- Partial: apenas dispositivos com backup ativo (subset menor)
-CREATE INDEX IF NOT EXISTS idx_devices_backup_enabled ON devices(backup_enabled) WHERE backup_enabled = TRUE;
-
 -- Ordenação por último backup
 CREATE INDEX IF NOT EXISTS idx_devices_last_backup    ON devices(last_backup_at DESC NULLS LAST);
 

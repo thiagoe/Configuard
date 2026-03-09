@@ -133,12 +133,6 @@ const DeviceDetail = () => {
                     {device.status}
                   </Badge>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Backup Habilitado</p>
-                  <Badge className={device.backup_enabled ? "bg-accent/20 text-accent border-accent/30" : "bg-muted text-muted-foreground border-border"}>
-                    {device.backup_enabled ? "Sim" : "Não"}
-                  </Badge>
-                </div>
               </div>
             </CardContent>
           </Card>

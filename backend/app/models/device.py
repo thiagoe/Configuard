@@ -41,7 +41,6 @@ class Device(Base):
 
     # Status
     status = Column(String(20), default="active", nullable=False)
-    backup_enabled = Column(Boolean, default=True, nullable=False)
 
     # Last backup info
     last_backup_at = Column(DateTime, nullable=True)

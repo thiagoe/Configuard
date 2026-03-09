@@ -36,7 +36,6 @@ const getFieldLabel = (field: string): string => {
     hostname: "hostname",
     port: "port",
     status: "status",
-    backup_enabled: "backup_enabled",
     notes: "notes",
     location: "location",
     serial_number: "serial_number",

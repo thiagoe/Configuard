@@ -62,7 +62,6 @@ async def list_devices(
     brand_id: Optional[str] = Query(None, description="Filter by brand"),
     category_id: Optional[str] = Query(None, description="Filter by category"),
     model_id: Optional[str] = Query(None, description="Filter by model"),
-    backup_enabled: Optional[bool] = Query(None, description="Filter by backup enabled"),
 ):
     """
     List all devices for the current user.
@@ -92,9 +91,6 @@ async def list_devices(
     if model_id:
         query = query.filter(Device.model_id == model_id)
 
-    if backup_enabled is not None:
-        query = query.filter(Device.backup_enabled == backup_enabled)
-
     devices = query.order_by(Device.name).all()
 
     api_logger.info("Devices listed", user_id=current_user.id, count=len(devices))
@@ -112,7 +108,6 @@ async def list_devices_paginated(
     brand_id: Optional[str] = Query(None, description="Filter by brand"),
     category_id: Optional[str] = Query(None, description="Filter by category"),
     model_id: Optional[str] = Query(None, description="Filter by model"),
-    backup_enabled: Optional[bool] = Query(None, description="Filter by backup enabled"),
 ):
     """
     List devices with pagination.
@@ -142,9 +137,6 @@ async def list_devices_paginated(
     if model_id:
         query = query.filter(Device.model_id == model_id)
 
-    if backup_enabled is not None:
-        query = query.filter(Device.backup_enabled == backup_enabled)
-
     total = query.count()
     total_pages = ceil(total / page_size) if total > 0 else 1
 
@@ -160,7 +152,7 @@ async def list_devices_paginated(
 
 
 CSV_FIELDS = [
-    "name", "ip_address", "hostname", "port", "protocol", "status", "backup_enabled",
+    "name", "ip_address", "hostname", "port", "protocol", "status",
     "notes", "brand_name", "category_name", "model_name", "credential_name",
 ]
 
@@ -202,7 +194,6 @@ async def export_devices(
             "port": d.port,
             "protocol": "telnet" if d.port == 23 else "ssh",
             "status": d.status,
-            "backup_enabled": "true" if d.backup_enabled else "false",
             "notes": d.notes or "",
             "brand_name": d.brand.name if d.brand else "",
             "category_name": d.category.name if d.category else "",
@@ -255,12 +246,6 @@ async def import_devices(
     created = 0
     skipped = 0
     errors = []
-
-    def _bool(val: str, default: bool) -> bool:
-        v = (val or "").strip().lower()
-        if v in ("true", "1", "yes", "sim"): return True
-        if v in ("false", "0", "no", "nao", "não"): return False
-        return default
 
     # Pre-fetch all existing records for name lookup (mutable dicts updated on create)
     brands: dict[str, str] = {b.name.lower(): b.id for b in db.query(Brand).all()}
@@ -357,7 +342,6 @@ async def import_devices(
                 model_id=model_id,
                 credential_id=credential_id,
                 status=(row.get("status") or "active").strip(),
-                backup_enabled=_bool(row.get("backup_enabled", ""), True),
                 notes=(row.get("notes") or "").strip() or None,
             )
             db.add(device)
@@ -433,7 +417,6 @@ async def create_device(
         credential_id=data.credential_id,
         backup_template_id=data.backup_template_id,
         status=data.status,
-        backup_enabled=data.backup_enabled,
         notes=data.notes,
     )
 
@@ -494,13 +477,13 @@ async def update_device(
     if "backup_template_id" in update_data and update_data["backup_template_id"] is not None:
         _validate_reference(db, BackupTemplate, update_data["backup_template_id"], "backup template")
 
-    api_logger.info("Device update - before", device_id=device.id, backup_enabled_before=device.backup_enabled, update_data=update_data)
+    api_logger.info("Device update - before", device_id=device.id, update_data=update_data)
 
-    # Check if device is being deactivated (backup_enabled going from True to False)
+    # Check if device is being deactivated (status going to inactive)
     being_deactivated = (
-        "backup_enabled" in update_data
-        and not update_data["backup_enabled"]
-        and old_data.get("backup_enabled")
+        "status" in update_data
+        and update_data["status"] != "active"
+        and old_data.get("status") == "active"
     )
     device_name = device.name
 
@@ -509,7 +492,7 @@ async def update_device(
 
     db.commit()
 
-    api_logger.info("Device update - after commit", device_id=device.id, backup_enabled_after=device.backup_enabled)
+    api_logger.info("Device update - after commit", device_id=device.id, status=device.status)
 
     if being_deactivated:
         send_notification(db, "device_disabled", {"device_name": device_name})

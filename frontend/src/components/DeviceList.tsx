@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { DeviceCreate, DeviceUpdate, toggleDeviceBackup, updateDevice } from "@/services/devices";
+import { DeviceCreate, DeviceUpdate, updateDevice } from "@/services/devices";
 import { getBrands, Brand } from "@/services/brands";
 import { getCategories, Category } from "@/services/categories";
 import { Credential } from "@/services/credentials";
 import { useCredentials } from "@/hooks/useCredentials";
 import { getTemplates, BackupTemplate } from "@/services/templates";
 import { getDeviceModels, DeviceModel } from "@/services/deviceModels";
-import { useDevices, useCreateDevice, useUpdateDevice, useDeleteDevice, useToggleDeviceBackup, useExecuteDeviceBackup } from "@/hooks/useDevices";
+import { useDevices, useCreateDevice, useUpdateDevice, useDeleteDevice, useExecuteDeviceBackup } from "@/hooks/useDevices";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -172,8 +172,6 @@ const DeviceList = () => {
 
   const updateMutation = useUpdateDevice();
 
-  const toggleBackupMutation = useToggleDeviceBackup();
-
   const executeBackupMutation = useExecuteDeviceBackup();
 
   const deleteMutation = useDeleteDevice();
@@ -228,20 +226,6 @@ const DeviceList = () => {
 
     return matchesSearch;
   });
-
-  const toggleBackup = (deviceId: string, currentState: boolean) => {
-    toggleBackupMutation.mutate(
-      { id: deviceId, enabled: !currentState },
-      {
-        onSuccess: () => {
-          toast.success(!currentState ? t("toast.backupEnabled") : t("toast.backupDisabled"));
-        },
-        onError: (error: any) => {
-          toast.error(error.response?.data?.detail || error.message);
-        },
-      }
-    );
-  };
 
   const executeBackup = (deviceId: string, deviceName: string) => {
     toast.info(t("toast.backupRunning", { name: deviceName }));

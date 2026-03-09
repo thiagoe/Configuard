@@ -120,7 +120,6 @@ export interface Device extends BaseEntity {
   category_id: string | null;
   credential_id: string | null;
   backup_template_id: string | null;
-  backup_enabled: boolean;
   status: DeviceStatus;
   notes: string | null;
   last_backup_at: string | null;
