@@ -48,6 +48,7 @@ class BackupTemplate(Base):
     # Used to strip metadata headers, vendor-specific lines, etc.
     output_cleanup_patterns = Column(Text, nullable=True)
     error_patterns = Column(Text, nullable=True)
+    transport_options = Column(JSON, nullable=True)
 
     # Flags
     is_default = Column(Boolean, default=False, nullable=False)

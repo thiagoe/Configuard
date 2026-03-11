@@ -49,6 +49,8 @@ export interface TemplateAdvancedConfig {
   output_cleanup_patterns: string;
   output_cleanup_patterns_enabled: boolean;
   line_ending: "\n" | "\r\n";
+  telnet_sync_enabled: boolean;
+  telnet_sync_idle_ms: number;
 }
 
 interface TemplateAdvancedSettingsProps {
@@ -66,7 +68,7 @@ const TemplateAdvancedSettings = ({ config, onChange }: TemplateAdvancedSettings
 
   return (
     <Tabs defaultValue="prompts" className="space-y-2">
-      <TabsList className="grid grid-cols-4 w-full h-8">
+      <TabsList className="grid grid-cols-5 w-full h-8">
         <TabsTrigger value="prompts" className="text-xs gap-1 px-1">
           <Terminal className="h-3.5 w-3.5" />
           {t("advanced.tabs.prompts")}
@@ -78,6 +80,10 @@ const TemplateAdvancedSettings = ({ config, onChange }: TemplateAdvancedSettings
         <TabsTrigger value="timing" className="text-xs gap-1 px-1">
           <Clock className="h-3.5 w-3.5" />
           {t("advanced.tabs.timeouts")}
+        </TabsTrigger>
+        <TabsTrigger value="transport" className="text-xs gap-1 px-1">
+          <Settings2 className="h-3.5 w-3.5" />
+          {t("advanced.tabs.transport")}
         </TabsTrigger>
         <TabsTrigger value="commands" className="text-xs gap-1 px-1">
           <FileText className="h-3.5 w-3.5" />
@@ -338,6 +344,48 @@ const TemplateAdvancedSettings = ({ config, onChange }: TemplateAdvancedSettings
                   disabled={!config.command_timeout_enabled}
                 />
               </div>
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {/* Transport Tab */}
+      <TabsContent value="transport" className="space-y-3 mt-0">
+        <Card className="border-muted">
+          <CardHeader className="py-3 px-4">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Settings2 className="h-4 w-4" />
+              {t("advanced.telnetSync.title")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 px-4 pb-4">
+            <div className="flex items-center justify-between py-1">
+              <div>
+                <Label className="text-xs">{t("advanced.telnetSync.enable")}</Label>
+                <p className="text-[10px] text-muted-foreground">
+                  {t("advanced.telnetSync.enableHint")}
+                </p>
+              </div>
+              <Switch
+                checked={config.telnet_sync_enabled}
+                onCheckedChange={(checked) => updateConfig({ telnet_sync_enabled: checked })}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs">{t("advanced.telnetSync.idleMs")}</Label>
+              <Input
+                type="number"
+                min={0}
+                max={5000}
+                value={config.telnet_sync_idle_ms}
+                onChange={(e) => updateConfig({ telnet_sync_idle_ms: parseInt(e.target.value, 10) || 0 })}
+                className="h-8 text-sm"
+                disabled={!config.telnet_sync_enabled}
+              />
+              <p className="text-[10px] text-muted-foreground">
+                {t("advanced.telnetSync.idleMsHint")}
+              </p>
             </div>
           </CardContent>
         </Card>

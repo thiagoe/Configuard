@@ -67,6 +67,7 @@
       "prompts": "Prompts",
       "auth": "Auth",
       "timeouts": "Timeouts",
+      "transport": "Transporte",
       "commands": "Comandos"
     },
     "promptPatterns": "Padrões de Prompt",
@@ -90,7 +91,14 @@
     "outputCleanup": "Limpeza de Saída",
     "enable": "Habilitar",
     "regexHint": "Regex (um por linha) para remover do início da saída",
-    "errorPatterns": "Padrões de Erro"
+    "errorPatterns": "Padrões de Erro",
+    "telnetSync": {
+      "title": "Sincronização Telnet por Template",
+      "enable": "Ativar drain Telnet por template",
+      "enableHint": "Mantém o comportamento restrito a este template.",
+      "idleMs": "Idle para drain (ms)",
+      "idleMsHint": "Quando ativo, o template aplica apenas o drain pós-tecla no fluxo Telnet."
+    }
   },
   "steps": {
     "title": "Passos de Execução",

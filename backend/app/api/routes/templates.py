@@ -149,6 +149,7 @@ async def create_template(
         line_ending=data.line_ending,
         output_cleanup_patterns=data.output_cleanup_patterns,
         error_patterns=data.error_patterns,
+        transport_options=data.transport_options.model_dump(exclude_none=True) if data.transport_options else None,
         is_default=data.is_default,
     )
 
@@ -273,6 +274,8 @@ async def update_template(
         template.output_cleanup_patterns = data.output_cleanup_patterns
     if data.error_patterns is not None:
         template.error_patterns = data.error_patterns
+    if data.transport_options is not None:
+        template.transport_options = data.transport_options.model_dump(exclude_none=True)
     if data.is_default is not None:
         template.is_default = data.is_default
 
@@ -427,6 +430,7 @@ async def duplicate_template(
         line_ending=template.line_ending,
         output_cleanup_patterns=template.output_cleanup_patterns,
         error_patterns=template.error_patterns,
+        transport_options=template.transport_options,
         is_default=False,  # Never duplicate as default
     )
 

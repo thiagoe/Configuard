@@ -52,6 +52,8 @@ const defaultAdvancedConfig: TemplateAdvancedConfig = {
   output_cleanup_patterns: "",
   output_cleanup_patterns_enabled: false,
   line_ending: "\\n",
+  telnet_sync_enabled: false,
+  telnet_sync_idle_ms: 0,
 };
 
 interface FormData {
@@ -229,6 +231,12 @@ const BackupTemplates = () => {
       output_cleanup_patterns: advancedConfig.output_cleanup_patterns_enabled ? advancedConfig.output_cleanup_patterns : "",
       error_patterns: advancedConfig.error_patterns_enabled ? advancedConfig.error_patterns : "",
       line_ending: advancedConfig.line_ending,
+      transport_options: {
+        telnet_sync: {
+          enabled: advancedConfig.telnet_sync_enabled,
+          ...(advancedConfig.telnet_sync_enabled ? { idle_ms: advancedConfig.telnet_sync_idle_ms } : {}),
+        },
+      },
     };
 
     if (editingTemplate) {
@@ -310,6 +318,8 @@ const BackupTemplates = () => {
         output_cleanup_patterns: template.output_cleanup_patterns ?? "",
         output_cleanup_patterns_enabled: !!(template.output_cleanup_patterns && template.output_cleanup_patterns.trim()),
         line_ending: template.line_ending ?? "\\n",
+        telnet_sync_enabled: template.transport_options?.telnet_sync?.enabled ?? false,
+        telnet_sync_idle_ms: template.transport_options?.telnet_sync?.idle_ms ?? 400,
       });
       if (template.steps && template.steps.length > 0) {
         setSteps(
@@ -353,6 +363,7 @@ const BackupTemplates = () => {
       login_prompt: template.login_prompt || null,
       password_prompt: template.password_prompt || null,
       enable_prompt: template.enable_prompt || null,
+      enable_required: template.enable_required ?? false,
       enable_password_required: template.enable_password_required ?? false,
       connection_timeout: template.connection_timeout || 30,
       command_timeout: template.command_timeout || 60,
@@ -363,6 +374,7 @@ const BackupTemplates = () => {
       output_cleanup_patterns: template.output_cleanup_patterns || null,
       error_patterns: template.error_patterns || null,
       line_ending: template.line_ending || "\\n",
+      transport_options: template.transport_options || null,
     };
 
     if (template.use_steps && template.steps && template.steps.length > 0) {
@@ -511,6 +523,7 @@ const BackupTemplates = () => {
           login_prompt: template.login_prompt || undefined,
           password_prompt: template.password_prompt || undefined,
           enable_prompt: template.enable_prompt || undefined,
+          enable_required: template.enable_required ?? undefined,
           enable_password_required: template.enable_password_required ?? undefined,
           connection_timeout: template.connection_timeout || undefined,
           command_timeout: template.command_timeout || undefined,
@@ -521,6 +534,7 @@ const BackupTemplates = () => {
           output_cleanup_patterns: template.output_cleanup_patterns || undefined,
           error_patterns: template.error_patterns || undefined,
           line_ending: template.line_ending || undefined,
+          transport_options: template.transport_options || undefined,
         });
         clonedCount++;
       } catch (e) {
@@ -587,6 +601,7 @@ const BackupTemplates = () => {
             login_prompt: templateData.login_prompt || undefined,
             password_prompt: templateData.password_prompt || undefined,
             enable_prompt: templateData.enable_prompt || undefined,
+            enable_required: templateData.enable_required ?? undefined,
             enable_password_required: templateData.enable_password_required ?? undefined,
             connection_timeout: templateData.connection_timeout || undefined,
             command_timeout: templateData.command_timeout || undefined,
@@ -597,6 +612,7 @@ const BackupTemplates = () => {
             output_cleanup_patterns: templateData.output_cleanup_patterns || undefined,
             error_patterns: templateData.error_patterns || undefined,
             line_ending: templateData.line_ending || undefined,
+            transport_options: templateData.transport_options || undefined,
           });
           importedCount++;
         } catch (e) {
@@ -923,6 +939,15 @@ const BackupTemplates = () => {
                   <div>
                     <Label className="text-muted-foreground">{t("fields.postCommands")}</Label>
                     <pre className="mt-1 p-2 bg-muted rounded font-mono text-xs">{previewTemplate.post_commands}</pre>
+                  </div>
+                )}
+
+                {previewTemplate.transport_options?.telnet_sync?.enabled && (
+                  <div>
+                    <Label className="text-muted-foreground">{t("advanced.telnetSync.title")}</Label>
+                    <div className="mt-1 p-3 bg-muted rounded text-xs space-y-1">
+                      <p>{t("advanced.telnetSync.idleMs")}: {previewTemplate.transport_options.telnet_sync.idle_ms ?? defaultAdvancedConfig.telnet_sync_idle_ms}</p>
+                    </div>
                   </div>
                 )}
               </div>

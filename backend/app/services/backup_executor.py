@@ -55,6 +55,12 @@ def _clean_output(text: str, prompt_pattern: str, cleanup_patterns: Optional[str
     # Remove carriage returns and normalize line endings
     text = text.replace('\r\n', '\n').replace('\r', '\n')
 
+    # Remove inline pagination markers left in output by interactive CLIs.
+    # These appear mid-line mixed with content; strip them and surrounding whitespace.
+    # Also removes orphaned "(Q to quit)" fragments left after the marker is split across chunks.
+    text = re.sub(r'\s*Press any key to continue[^\n]*(?:\(Q to quit\)[^\n]*)?', '', text)
+    text = re.sub(r'[ \t]*\(Q to quit\)[ \t]*', '', text)
+
     # Remove trailing spaces from each line
     lines = [line.rstrip() for line in text.split('\n')]
 
@@ -83,7 +89,8 @@ def _clean_output(text: str, prompt_pattern: str, cleanup_patterns: Optional[str
                 lines.pop(0)
                 continue
             break
-        # Remove trailing lines that are just prompts
+        # Remove trailing lines that are just prompts or partial prompts (e.g. hostname without #)
+        hostname_re = re.compile(r'^[\w][\w.\-]*$')
         while lines:
             line = lines[-1].strip()
             if not line:
@@ -92,9 +99,24 @@ def _clean_output(text: str, prompt_pattern: str, cleanup_patterns: Optional[str
             if prompt_regex.search(line) and len(line) < 100:
                 lines.pop()
                 continue
+            # Remove orphan hostname lines when a prompt fragment is left without its trailing marker.
+            if hostname_re.match(line) and len(line) < 60 and '-' in line:
+                lines.pop()
+                continue
             break
     except re.error:
         pass
+
+    # Collapse runs of blank lines in the middle of the output (max 1 consecutive blank line)
+    collapsed = []
+    prev_blank = False
+    for line in lines:
+        is_blank = not line.strip()
+        if is_blank and prev_blank:
+            continue
+        collapsed.append(line)
+        prev_blank = is_blank
+    lines = collapsed
 
     # Apply custom cleanup patterns from template
     if cleanup_patterns:
@@ -155,6 +177,37 @@ def _decrypt_if_needed(value: Optional[str]) -> Optional[str]:
     if not value:
         return None
     return decrypt(value) if is_encrypted(value) else value
+
+
+def _normalize_command_name(command: Optional[str]) -> str:
+    """Normalize a command string for template-scoped matching."""
+    return " ".join((command or "").strip().lower().split())
+
+
+def _get_telnet_sync_options(template: BackupTemplate) -> dict:
+    """Read template-scoped Telnet sync options without affecting global behavior."""
+    transport_options = template.transport_options or {}
+    telnet_sync = transport_options.get("telnet_sync") or {}
+    enabled = bool(telnet_sync.get("enabled"))
+    return {
+        "enabled": enabled,
+        "after_login": enabled and bool(telnet_sync.get("after_login")),
+        "before_commands": {
+            _normalize_command_name(command)
+            for command in telnet_sync.get("before_commands", [])
+            if isinstance(command, str) and command.strip()
+        },
+        "enter_count": max(0, min(int(telnet_sync.get("enter_count", 2)), 5)) if enabled else 0,
+        "settle_seconds": max(0.0, min(float(telnet_sync.get("settle_ms", 500)) / 1000.0, 5.0)) if enabled else 0.0,
+        "idle_seconds": max(0.1, min(float(telnet_sync.get("idle_ms", 400)) / 1000.0, 5.0)) if enabled else 0.1,
+    }
+
+
+def _should_telnet_sync_before_command(command: str, telnet_sync_options: dict) -> bool:
+    """Return True when the template opted into a terminal resync before the command."""
+    if not telnet_sync_options.get("enabled"):
+        return False
+    return _normalize_command_name(command) in telnet_sync_options["before_commands"]
 
 
 def _get_device_template(db: Session, device: Device) -> BackupTemplate:
@@ -266,6 +319,7 @@ def execute_backup(
     # Get line_ending from template, interpreting escaped sequences
     raw_line_ending = template.line_ending or "\\n"
     line_ending = raw_line_ending.replace("\\r", "\r").replace("\\n", "\n")
+    telnet_sync_options = _get_telnet_sync_options(template)
     emit("status", "Configurações do template carregadas")
     emit(
         "verbose",
@@ -274,6 +328,7 @@ def execute_backup(
         pagination_pattern=pagination_pattern,
         connection_timeout=template.connection_timeout,
         command_timeout=template.command_timeout,
+        telnet_sync_enabled=telnet_sync_options["enabled"],
     )
 
     port = device.port
@@ -310,6 +365,19 @@ def execute_backup(
         elif event_type == "login_failed":
             emit("error", message)
 
+    def sync_telnet_terminal(reason: str) -> None:
+        """Run the opt-in Telnet terminal resync sequence for templates that need it."""
+        if not is_telnet or not telnet_sync_options["enabled"]:
+            return
+        emit("debug", f"Telnet sync: {reason}")
+        client.sync_terminal(
+            enter_count=telnet_sync_options["enter_count"],
+            settle_time=telnet_sync_options["settle_seconds"],
+            idle_seconds=telnet_sync_options["idle_seconds"],
+            on_debug=(lambda msg: emit("debug", msg)) if effective_level == "debug" else None,
+            line_ending=line_ending,
+        )
+
     try:
         if is_telnet:
             if not password:
@@ -332,6 +400,8 @@ def execute_backup(
                 on_event=on_login_event,
             )
             emit("status", "Conexão Telnet estabelecida")
+            if telnet_sync_options["after_login"]:
+                sync_telnet_terminal("ressincronizando sessão após login")
         else:
             if not password and not private_key:
                 raise BackupError("SSH requires password or private key")
@@ -357,6 +427,8 @@ def execute_backup(
         if template.enable_required and not template.enable_password_required:
             emit("status", "Entrando no modo enable")
             emit("debug", f"Enable: enviando comando 'enable', aguardando prompt='{prompt_pattern}'")
+            if _should_telnet_sync_before_command("enable", telnet_sync_options):
+                sync_telnet_terminal("preparando terminal antes do comando 'enable'")
             client.send_command(
                 "enable",
                 prompt_pattern=prompt_pattern,
@@ -371,6 +443,8 @@ def execute_backup(
             enable_prompt = template.enable_prompt or r"[Pp]assword:"
             emit("status", "Entrando no modo enable")
             emit("debug", f"Enable: enviando comando 'enable', aguardando prompt='{enable_prompt}'")
+            if _should_telnet_sync_before_command("enable", telnet_sync_options):
+                sync_telnet_terminal("preparando terminal antes do comando 'enable'")
             client.send_command(
                 "enable",
                 prompt_pattern=enable_prompt,
@@ -391,6 +465,8 @@ def execute_backup(
 
         if template.pre_commands:
             for command in [c.strip() for c in template.pre_commands.split("\n") if c.strip()]:
+                if _should_telnet_sync_before_command(command, telnet_sync_options):
+                    sync_telnet_terminal(f"preparando terminal antes de {command!r}")
                 emit("command", f"Executando: {command}", command=command, timeout=template.command_timeout)
                 output = client.send_command(
                     command,
@@ -415,22 +491,39 @@ def execute_backup(
                     _time.sleep(time_to_sleep)
                     continue
                 if step.step_type == "send_key":
-                    key_map = {
-                        "enter": "\n",
-                        "space": " ",
-                        "tab": "\t",
-                        "escape": "\x1b",
-                        "ctrl+c": "\x03",
-                        "ctrl+z": "\x1a",
-                    }
-                    raw_key = key_map.get(step.content.lower().strip(), step.content)
                     emit("command", f"Enviando tecla: {step.content}", command=step.content)
-                    if hasattr(client, 'channel') and client.channel:
-                        client.channel.send(raw_key)
-                    elif hasattr(client, 'child') and client.child:
-                        client.child.send(raw_key)
-                    import time as _time
-                    _time.sleep(step.timeout or 1)
+                    if is_telnet and telnet_sync_options["enabled"] and hasattr(client, "send_key"):
+                        client.send_key(
+                            step.content,
+                            settle_time=step.timeout or telnet_sync_options["settle_seconds"],
+                            idle_seconds=telnet_sync_options["idle_seconds"],
+                            on_debug=(lambda msg: emit("debug", msg)) if effective_level == "debug" else None,
+                            line_ending=line_ending,
+                        )
+                    else:
+                        key_map = {
+                            "enter": "\n",
+                            "space": " ",
+                            "tab": "\t",
+                            "escape": "\x1b",
+                            "ctrl+c": "\x03",
+                            "ctrl+z": "\x1a",
+                        }
+                        raw_key = key_map.get(step.content.lower().strip(), step.content)
+                        if hasattr(client, 'channel') and client.channel:
+                            client.channel.send(raw_key)
+                        elif hasattr(client, 'child') and client.child:
+                            client.child.send(raw_key)
+                        import time as _time
+                        _time.sleep(step.timeout or 1)
+                        # Drain any residual echo/control data from the interactive channel.
+                        if hasattr(client, 'child') and client.child:
+                            try:
+                                while True:
+                                    if not client.child.read_nonblocking(size=4096, timeout=0.3):
+                                        break
+                            except Exception:
+                                pass
                     continue
                 if step.step_type == "set_prompt":
                     prompt_pattern = step.content or prompt_pattern
@@ -458,6 +551,8 @@ def execute_backup(
                     command=step.content,
                     timeout=step.timeout or template.command_timeout,
                 )
+                if _should_telnet_sync_before_command(step.content, telnet_sync_options):
+                    sync_telnet_terminal(f"preparando terminal antes de {step.content!r}")
                 output = client.send_command(
                     step.content,
                     prompt_pattern=step.expect_pattern or prompt_pattern,
@@ -474,6 +569,8 @@ def execute_backup(
                     variables[step.variable_name] = output
         else:
             for command in template.commands_list:
+                if _should_telnet_sync_before_command(command, telnet_sync_options):
+                    sync_telnet_terminal(f"preparando terminal antes de {command!r}")
                 emit("command", f"Executando: {command}", command=command, timeout=template.command_timeout)
                 output = client.send_command(
                     command,
@@ -489,6 +586,8 @@ def execute_backup(
 
         if template.post_commands:
             for command in [c.strip() for c in template.post_commands.split("\n") if c.strip()]:
+                if _should_telnet_sync_before_command(command, telnet_sync_options):
+                    sync_telnet_terminal(f"preparando terminal antes de {command!r}")
                 emit("command", f"Executando: {command}", command=command, timeout=template.command_timeout)
                 output = client.send_command(
                     command,

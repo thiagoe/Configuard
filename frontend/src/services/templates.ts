@@ -4,6 +4,19 @@
 
 import api from './api';
 
+export interface TelnetSyncOptions {
+  enabled: boolean;
+  after_login?: boolean;
+  before_commands?: string[];
+  enter_count?: number;
+  settle_ms?: number;
+  idle_ms?: number;
+}
+
+export interface TransportOptions {
+  telnet_sync?: TelnetSyncOptions | null;
+}
+
 export interface BackupTemplate {
   id: string;
   name: string;
@@ -25,6 +38,7 @@ export interface BackupTemplate {
   output_cleanup_patterns?: string | null;
   line_ending?: "\\n" | "\\r\\n";
   error_patterns?: string | null;
+  transport_options?: TransportOptions | null;
   steps?: TemplateStep[];
   is_default: boolean;
   created_at: string;
@@ -68,6 +82,7 @@ export interface BackupTemplateCreate {
   output_cleanup_patterns?: string;
   line_ending?: "\\n" | "\\r\\n";
   error_patterns?: string;
+  transport_options?: TransportOptions;
   is_default?: boolean;
 }
 
@@ -105,6 +120,7 @@ export interface BackupTemplateUpdate {
   output_cleanup_patterns?: string;
   line_ending?: "\\n" | "\\r\\n";
   error_patterns?: string;
+  transport_options?: TransportOptions;
   is_default?: boolean;
 }
 

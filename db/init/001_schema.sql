@@ -142,6 +142,7 @@ CREATE TABLE IF NOT EXISTS backup_templates (
     error_patterns           TEXT,
     line_ending              VARCHAR(10) DEFAULT '\n',
     output_cleanup_patterns  TEXT,
+    transport_options        JSONB,
     created_at               TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
     updated_at               TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
     CONSTRAINT fk_backup_templates_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE

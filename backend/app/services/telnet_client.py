@@ -33,6 +33,111 @@ class TelnetClientWrapper:
         self.timeout = timeout
         self.child = None
 
+    def _normalize_line_ending(self, line_ending: str) -> str:
+        """Telnet NVT expects CRLF for newline-oriented input."""
+        return line_ending if "\r" in line_ending else line_ending.replace("\n", "\r\n")
+
+    def _drain_until_idle(
+        self,
+        idle_seconds: float = 0.4,
+        read_timeout: float = 0.1,
+        poll_interval: float = 0.1,
+        max_wait: Optional[float] = None,
+        on_debug: Optional[Callable[[str], None]] = None,
+    ) -> str:
+        """Drain pending Telnet output until the channel stays idle for a period."""
+        if not self.child:
+            raise RuntimeError("Telnet session not connected")
+
+        drained_chunks: list[str] = []
+        idle_started_at = time.monotonic()
+        started_at = idle_started_at
+
+        while True:
+            got_data = False
+            try:
+                chunk = self.child.read_nonblocking(size=4096, timeout=read_timeout)
+                if chunk:
+                    drained_chunks.append(chunk)
+                    got_data = True
+            except (pexpect.TIMEOUT, pexpect.EOF):
+                pass
+
+            now = time.monotonic()
+            if got_data:
+                idle_started_at = now
+            elif now - idle_started_at >= idle_seconds:
+                break
+
+            if max_wait is not None and now - started_at >= max_wait:
+                break
+
+            time.sleep(poll_interval)
+
+        drained = "".join(drained_chunks)
+        if on_debug and drained:
+            on_debug(f"Telnet drained {len(drained)} bytes while waiting for idle")
+        return drained
+
+    def send_key(
+        self,
+        key: str,
+        settle_time: float = 0.5,
+        idle_seconds: float = 0.4,
+        on_debug: Optional[Callable[[str], None]] = None,
+        line_ending: str = "\n",
+    ) -> str:
+        """Send a raw key sequence and optionally drain buffered output afterwards."""
+        if not self.child:
+            raise RuntimeError("Telnet session not connected")
+
+        key_name = (key or "").lower().strip()
+        if key_name == "enter":
+            raw_key = self._normalize_line_ending(line_ending)
+        else:
+            key_map = {
+                "space": " ",
+                "tab": "\t",
+                "escape": "\x1b",
+                "ctrl+c": "\x03",
+                "ctrl+z": "\x1a",
+            }
+            raw_key = key_map.get(key_name, key)
+
+        self.child.send(raw_key)
+        if on_debug:
+            on_debug(f"Telnet send key {key!r} as {raw_key!r}")
+
+        if settle_time > 0:
+            time.sleep(settle_time)
+
+        return self._drain_until_idle(
+            idle_seconds=idle_seconds,
+            on_debug=on_debug,
+        )
+
+    def sync_terminal(
+        self,
+        enter_count: int = 2,
+        settle_time: float = 0.5,
+        idle_seconds: float = 0.4,
+        on_debug: Optional[Callable[[str], None]] = None,
+        line_ending: str = "\n",
+    ) -> str:
+        """Resynchronize interactive terminal state using ENTER + idle drains."""
+        drained_chunks = []
+        for _ in range(max(0, enter_count)):
+            drained_chunks.append(
+                self.send_key(
+                    "enter",
+                    settle_time=settle_time,
+                    idle_seconds=idle_seconds,
+                    on_debug=on_debug,
+                    line_ending=line_ending,
+                )
+            )
+        return "".join(drained_chunks)
+
     def connect(
         self,
         on_debug: Optional[Callable[[str], None]] = None,
@@ -63,7 +168,7 @@ class TelnetClientWrapper:
             self.child.send(self.username + "\r\n")
             try:
                 # Also accept prompt_pattern in case device logs in without asking for password
-                idx2 = self.child.expect([self.password_prompt, self.prompt_pattern])
+                idx2 = self.child.expect([self.password_prompt, re.compile(self.prompt_pattern, re.MULTILINE | re.IGNORECASE)])
             except (pexpect.TIMEOUT, pexpect.EOF) as exc:
                 if on_debug:
                     before_text = (self.child.before or "").replace("\r", "").replace("\n", "\\n")
@@ -87,10 +192,11 @@ class TelnetClientWrapper:
 
         self.child.send(self.password + "\r\n")
 
+        compiled_prompt = re.compile(self.prompt_pattern, re.MULTILINE | re.IGNORECASE)
         try:
             # After sending password, check for prompt OR login failure
             idx = self.child.expect([
-                self.prompt_pattern,         # 0 - success
+                compiled_prompt,            # 0 - success
                 r"(?i)login failed",         # 1 - login failed
                 r"(?i)authentication failed", # 2 - auth failed
                 r"(?i)access denied",        # 3 - access denied
@@ -99,7 +205,6 @@ class TelnetClientWrapper:
                 self.login_prompt,           # 6 - login prompt again = failed
             ])
             if idx == 0:
-                # Login successful
                 if on_event:
                     on_event("login_success", f"Login Telnet realizado com sucesso (usuário: {self.username})")
                 if on_debug:
@@ -150,13 +255,15 @@ class TelnetClientWrapper:
         if on_debug:
             on_debug(f"Telnet send command, timeout={timeout}s")
             on_debug(f"Telnet aguardando prompt pattern='{prompt_pattern}'")
-        # Telnet NVT requires CRLF — normalize line ending regardless of template setting
-        effective_ending = line_ending if "\r" in line_ending else line_ending.replace("\n", "\r\n")
+        # Telnet NVT requires CRLF — normalize line ending regardless of template setting.
+        effective_ending = self._normalize_line_ending(line_ending)
         self.child.send(command + effective_ending)
 
         pagination_count = 0
+        # Compile prompt pattern with MULTILINE so $ matches end-of-line, not just end-of-buffer.
+        compiled_prompt = re.compile(prompt_pattern, re.MULTILINE | re.IGNORECASE)
         while True:
-            patterns = [prompt_pattern]
+            patterns = [compiled_prompt]
             if pagination_pattern:
                 patterns.append(pagination_pattern)
 
@@ -176,7 +283,8 @@ class TelnetClientWrapper:
                 continue
 
             if on_debug:
-                on_debug(f"Telnet prompt detectado (pattern='{prompt_pattern}') — comando concluído")
+                prompt_matched = (self.child.after or "").strip() if isinstance(self.child.after, str) else ""
+                on_debug(f"Telnet prompt detectado: {command!r} → {prompt_matched!r}")
             break
 
         return output

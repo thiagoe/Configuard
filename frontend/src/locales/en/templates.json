@@ -67,6 +67,7 @@
       "prompts": "Prompts",
       "auth": "Auth",
       "timeouts": "Timeouts",
+      "transport": "Transport",
       "commands": "Commands"
     },
     "promptPatterns": "Prompt Patterns",
@@ -90,7 +91,14 @@
     "outputCleanup": "Output Cleanup",
     "enable": "Enable",
     "regexHint": "Regex (one per line) to remove from start of output",
-    "errorPatterns": "Error Patterns"
+    "errorPatterns": "Error Patterns",
+    "telnetSync": {
+      "title": "Template-Scoped Telnet Sync",
+      "enable": "Enable template-scoped Telnet drain",
+      "enableHint": "Keeps this behavior restricted to this template.",
+      "idleMs": "Idle for drain (ms)",
+      "idleMsHint": "When enabled, the template only applies post-key drain behavior in the Telnet flow."
+    }
   },
   "steps": {
     "title": "Execution Steps",

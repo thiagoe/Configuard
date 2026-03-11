@@ -54,6 +54,21 @@ class TemplateStepResponse(TemplateStepBase):
     created_at: datetime
 
 
+class TelnetSyncOptions(BaseModel):
+    """Template-scoped Telnet terminal resync options."""
+    enabled: bool = False
+    after_login: bool = False
+    before_commands: list[str] = Field(default_factory=list)
+    enter_count: int = Field(2, ge=0, le=5)
+    settle_ms: int = Field(500, ge=0, le=5000)
+    idle_ms: int = Field(400, ge=100, le=5000)
+
+
+class TransportOptions(BaseModel):
+    """Transport-specific template options."""
+    telnet_sync: Optional[TelnetSyncOptions] = None
+
+
 LineEndingEnum = Literal["\\n", "\\r\\n"]
 
 
@@ -94,6 +109,7 @@ class BackupTemplateBase(BaseModel):
     line_ending: LineEndingEnum = "\\n"  # Line ending for commands (\n or \r\n)
     output_cleanup_patterns: Optional[str] = None  # Regex patterns (one per line) to remove from output
     error_patterns: Optional[str] = None
+    transport_options: Optional[TransportOptions] = None
     is_default: bool = False
 
 
@@ -127,6 +143,7 @@ class BackupTemplateUpdate(BaseModel):
     line_ending: Optional[LineEndingEnum] = None
     output_cleanup_patterns: Optional[str] = None
     error_patterns: Optional[str] = None
+    transport_options: Optional[TransportOptions] = None
     is_default: Optional[bool] = None
     steps: Optional[list[TemplateStepCreate]] = None
 
