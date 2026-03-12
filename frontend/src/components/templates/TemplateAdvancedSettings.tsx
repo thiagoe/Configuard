@@ -24,6 +24,8 @@ import { useTranslation } from "react-i18next";
 export interface TemplateAdvancedConfig {
   prompt_pattern: string;
   prompt_enabled: boolean;
+  login_success_pattern: string;
+  login_success_pattern_enabled: boolean;
   login_prompt: string;
   login_prompt_enabled: boolean;
   password_prompt: string;
@@ -199,6 +201,31 @@ const TemplateAdvancedSettings = ({ config, onChange }: TemplateAdvancedSettings
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 px-4 pb-4">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">{t("advanced.loginSuccessPattern")}</Label>
+                <Switch
+                  checked={config.login_success_pattern_enabled}
+                  onCheckedChange={(checked) =>
+                    updateConfig({
+                      login_success_pattern_enabled: checked,
+                      login_success_pattern: checked && !config.login_success_pattern ? "[>#]" : config.login_success_pattern,
+                    })
+                  }
+                />
+              </div>
+              <Input
+                value={config.login_success_pattern}
+                onChange={(e) => updateConfig({ login_success_pattern: e.target.value })}
+                placeholder="[>#]"
+                className="font-mono h-8 text-sm"
+                disabled={!config.login_success_pattern_enabled}
+              />
+              <p className="text-[10px] text-muted-foreground">
+                {t("advanced.loginSuccessPatternHint")}
+              </p>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">

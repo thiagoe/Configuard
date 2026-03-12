@@ -128,6 +128,7 @@ CREATE TABLE IF NOT EXISTS backup_templates (
     commands                 TEXT NOT NULL,
     use_steps                BOOLEAN DEFAULT FALSE NOT NULL,
     prompt_pattern           VARCHAR(255) DEFAULT '#|>|$',
+    login_success_pattern    VARCHAR(255),
     login_prompt             VARCHAR(255) DEFAULT 'Username:|Login:',
     password_prompt          VARCHAR(255) DEFAULT 'Password:',
     enable_prompt            VARCHAR(255),

@@ -135,6 +135,7 @@ async def create_template(
         commands=data.commands,
         use_steps=data.use_steps,
         prompt_pattern=data.prompt_pattern,
+        login_success_pattern=data.login_success_pattern,
         login_prompt=data.login_prompt,
         password_prompt=data.password_prompt,
         enable_prompt=data.enable_prompt,
@@ -246,6 +247,8 @@ async def update_template(
         template.use_steps = data.use_steps
     if data.prompt_pattern is not None:
         template.prompt_pattern = data.prompt_pattern
+    if data.login_success_pattern is not None:
+        template.login_success_pattern = data.login_success_pattern
     if data.login_prompt is not None:
         template.login_prompt = data.login_prompt
     if data.password_prompt is not None:
@@ -416,6 +419,7 @@ async def duplicate_template(
         commands=template.commands,
         use_steps=template.use_steps,
         prompt_pattern=template.prompt_pattern,
+        login_success_pattern=template.login_success_pattern,
         login_prompt=template.login_prompt,
         password_prompt=template.password_prompt,
         enable_prompt=template.enable_prompt,

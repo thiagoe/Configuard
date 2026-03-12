@@ -21,6 +21,7 @@ class TelnetClientWrapper:
         login_prompt: str,
         password_prompt: str,
         prompt_pattern: str,
+        login_success_pattern: Optional[str] = None,
         timeout: int = 30,
     ) -> None:
         self.host = host
@@ -30,6 +31,7 @@ class TelnetClientWrapper:
         self.login_prompt = login_prompt
         self.password_prompt = password_prompt
         self.prompt_pattern = prompt_pattern
+        self.login_success_pattern = login_success_pattern or prompt_pattern
         self.timeout = timeout
         self.child = None
 
@@ -168,7 +170,10 @@ class TelnetClientWrapper:
             self.child.send(self.username + "\r\n")
             try:
                 # Also accept prompt_pattern in case device logs in without asking for password
-                idx2 = self.child.expect([self.password_prompt, re.compile(self.prompt_pattern, re.MULTILINE | re.IGNORECASE)])
+                idx2 = self.child.expect([
+                    self.password_prompt,
+                    re.compile(self.login_success_pattern, re.MULTILINE | re.IGNORECASE),
+                ])
             except (pexpect.TIMEOUT, pexpect.EOF) as exc:
                 if on_debug:
                     before_text = (self.child.before or "").replace("\r", "").replace("\n", "\\n")
@@ -192,7 +197,7 @@ class TelnetClientWrapper:
 
         self.child.send(self.password + "\r\n")
 
-        compiled_prompt = re.compile(self.prompt_pattern, re.MULTILINE | re.IGNORECASE)
+        compiled_prompt = re.compile(self.login_success_pattern, re.MULTILINE | re.IGNORECASE)
         try:
             # After sending password, check for prompt OR login failure
             idx = self.child.expect([

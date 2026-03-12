@@ -311,6 +311,7 @@ def execute_backup(
     passphrase = _decrypt_if_needed(credential.passphrase_encrypted)
 
     prompt_pattern = template.prompt_pattern or r"#|>|$"
+    login_success_pattern = template.login_success_pattern or prompt_pattern
     # Only use pagination if explicitly set in template (empty string = disabled)
     pagination_pattern = template.pagination_pattern if template.pagination_pattern else None
     pagination_key = template.pagination_key or " "
@@ -325,6 +326,7 @@ def execute_backup(
         "verbose",
         "Detalhes do template",
         prompt_pattern=prompt_pattern,
+        login_success_pattern=login_success_pattern,
         pagination_pattern=pagination_pattern,
         connection_timeout=template.connection_timeout,
         command_timeout=template.command_timeout,
@@ -393,6 +395,7 @@ def execute_backup(
                 login_prompt=login_prompt,
                 password_prompt=password_prompt,
                 prompt_pattern=prompt_pattern,
+                login_success_pattern=login_success_pattern,
                 timeout=template.connection_timeout,
             )
             client.connect(

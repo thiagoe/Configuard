@@ -97,3 +97,19 @@ def test_sync_terminal_replays_the_expected_enter_drain_sequence(monkeypatch):
 
     assert client.child.sent == ["\r\n", "\r\n"]
     assert drained == "prompt-1prompt-2"
+
+
+def test_login_success_pattern_can_differ_from_command_prompt():
+    client = TelnetClientWrapper(
+        host="172.16.1.121",
+        port=23,
+        username="admin",
+        password="secret",
+        login_prompt="login:",
+        password_prompt="password:",
+        prompt_pattern=r"hostname[>#]\s*$",
+        login_success_pattern=r"[>#]",
+    )
+
+    assert client.prompt_pattern == r"hostname[>#]\s*$"
+    assert client.login_success_pattern == r"[>#]"

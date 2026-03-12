@@ -24,6 +24,7 @@ export interface BackupTemplate {
   description?: string | null;
   use_steps: boolean;
   prompt_pattern?: string | null;
+  login_success_pattern?: string | null;
   login_prompt?: string | null;
   password_prompt?: string | null;
   enable_prompt?: string | null;
@@ -68,6 +69,7 @@ export interface BackupTemplateCreate {
   use_steps?: boolean;
   steps?: TemplateStepCreate[];
   prompt_pattern?: string;
+  login_success_pattern?: string;
   login_prompt?: string;
   password_prompt?: string;
   enable_prompt?: string;
@@ -106,6 +108,7 @@ export interface BackupTemplateUpdate {
   use_steps?: boolean;
   steps?: TemplateStepCreate[];
   prompt_pattern?: string;
+  login_success_pattern?: string;
   login_prompt?: string;
   password_prompt?: string;
   enable_prompt?: string;

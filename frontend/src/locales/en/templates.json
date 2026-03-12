@@ -78,6 +78,8 @@
     "lfDefault": "LF (\\n) - Default",
     "crlfMikrotik": "CRLF (\\r\\n) - MikroTik",
     "authentication": "Authentication",
+    "loginSuccessPattern": "Login Success Pattern",
+    "loginSuccessPatternHint": "Used only after sending the password. E.g. `[>#]` for devices that emit async logs before a stable prompt.",
     "loginPrompt": "Login Prompt",
     "passwordPrompt": "Password Prompt",
     "enablePrompt": "Enable Prompt",

@@ -95,6 +95,7 @@ class BackupTemplateBase(BaseModel):
     commands: Optional[str] = None  # Newline-separated commands
     use_steps: bool = False
     prompt_pattern: Optional[str] = Field(None, max_length=100)
+    login_success_pattern: Optional[str] = Field(None, max_length=100)
     login_prompt: Optional[str] = Field(None, max_length=100)
     password_prompt: Optional[str] = Field(None, max_length=100)
     enable_prompt: Optional[str] = Field(None, max_length=100)
@@ -129,6 +130,7 @@ class BackupTemplateUpdate(BaseModel):
     commands: Optional[str] = None
     use_steps: Optional[bool] = None
     prompt_pattern: Optional[str] = Field(None, max_length=100)
+    login_success_pattern: Optional[str] = Field(None, max_length=100)
     login_prompt: Optional[str] = Field(None, max_length=100)
     password_prompt: Optional[str] = Field(None, max_length=100)
     enable_prompt: Optional[str] = Field(None, max_length=100)

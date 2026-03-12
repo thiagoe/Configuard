@@ -27,6 +27,7 @@ class BackupTemplate(Base):
 
     # Connection settings
     prompt_pattern = Column(String(100), nullable=True)  # Regex for prompt detection
+    login_success_pattern = Column(String(100), nullable=True)  # Regex used only to detect successful login
     login_prompt = Column(String(100), nullable=True)
     password_prompt = Column(String(100), nullable=True)
     enable_prompt = Column(String(100), nullable=True)
