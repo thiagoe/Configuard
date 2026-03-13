@@ -91,7 +91,7 @@ async def list_devices(
     if model_id:
         query = query.filter(Device.model_id == model_id)
 
-    devices = query.order_by(Device.name).all()
+    devices = query.order_by(Device.name).limit(500).all()
 
     api_logger.info("Devices listed", user_id=current_user.id, count=len(devices))
     return devices

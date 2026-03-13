@@ -78,6 +78,8 @@ const DeviceList = () => {
   const [selectedDevices, setSelectedDevices] = useState<Set<string>>(new Set());
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [bulkToggleLoading, setBulkToggleLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [formData, setFormData] = useState({
     name: "",
     ip_address: "",
@@ -181,21 +183,30 @@ const DeviceList = () => {
     setCategoryFilter("all");
     setModelFilter("all");
     setStatusFilter("all");
+    setCurrentPage(1);
     localStorage.removeItem(DEVICE_SEARCH_KEY);
     localStorage.removeItem(DEVICE_FILTERS_KEY);
   };
 
+  // Reset to page 1 when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, brandFilter, categoryFilter, modelFilter, statusFilter, pageSize]);
+
   // Fetch devices
   const { data: devicesData, isLoading, refetch } = useDevices({
+    search: searchTerm || undefined,
     brand_id: brandFilter !== "all" ? brandFilter : undefined,
     category_id: categoryFilter !== "all" ? categoryFilter : undefined,
     model_id: modelFilter !== "all" ? modelFilter : undefined,
     status: statusFilter !== "all" ? statusFilter : undefined,
-    page: 1,
-    page_size: 100,
+    page: currentPage,
+    page_size: pageSize,
   });
 
   const devices = devicesData?.items || [];
+  const totalItems = devicesData?.total || 0;
+  const totalPages = devicesData?.total_pages || 1;
 
   const createMutation = useCreateDevice();
 
@@ -247,14 +258,7 @@ const DeviceList = () => {
     });
   };
 
-  const filteredDevices = devices.filter((device) => {
-    const matchesSearch =
-      device.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      device.ip_address.includes(searchTerm) ||
-      device.hostname?.toLowerCase().includes(searchTerm.toLowerCase());
-
-    return matchesSearch;
-  });
+  const filteredDevices = devices;
 
   const executeBackup = (deviceId: string, deviceName: string) => {
     toast.info(t("toast.backupRunning", { name: deviceName }));
@@ -1034,6 +1038,37 @@ const DeviceList = () => {
               <p className="text-sm text-muted-foreground mt-1">
                 {searchTerm ? t("noneFoundSearch") : t("noneFoundEmpty")}
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Pagination footer */}
+        {!isLoading && totalItems > 0 && (
+          <div className="flex items-center justify-between px-2 pt-4 pb-1 border-t border-border mt-2">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>{t("pagination.showing", { from: (currentPage - 1) * pageSize + 1, to: Math.min(currentPage * pageSize, totalItems), total: totalItems })}</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">{t("pagination.perPage")}</span>
+                <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+                  <SelectTrigger className="w-20 h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setCurrentPage(1)} disabled={currentPage === 1}>«</Button>
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}>‹</Button>
+                <span className="text-sm px-2 text-muted-foreground">{t("pagination.page", { page: currentPage, total: totalPages })}</span>
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages}>›</Button>
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages}>»</Button>
+              </div>
             </div>
           </div>
         )}

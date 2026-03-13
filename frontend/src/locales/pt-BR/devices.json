@@ -46,6 +46,11 @@
   "noneFound": "Nenhum dispositivo encontrado",
   "noneFoundSearch": "Tente ajustar os termos de busca",
   "noneFoundEmpty": "Adicione seu primeiro dispositivo para começar",
+  "pagination": {
+    "showing": "Exibindo {{from}}–{{to}} de {{total}}",
+    "perPage": "Por página:",
+    "page": "Página {{page}} de {{total}}"
+  },
   "adding": "Adicionando...",
   "saving": "Salvando...",
   "saveChanges": "Salvar Alterações",
