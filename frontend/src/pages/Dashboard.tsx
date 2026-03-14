@@ -42,7 +42,7 @@ const Dashboard = () => {
   // Fetch recent failed executions separately for alerts
   const { data: failedExecutions } = useQuery({
     queryKey: ["backup-executions-failed"],
-    queryFn: () => getBackupExecutions({ page: 1, page_size: 10, status: "failed" }),
+    queryFn: () => getBackupExecutions({ page: 1, page_size: 20, status: "failed" }),
     staleTime: 30 * 1000,
     refetchInterval: 30 * 1000,
   });
@@ -87,7 +87,7 @@ const Dashboard = () => {
 
   const alerts = useMemo(() => {
     const items = failedExecutions?.items ?? [];
-    return items.slice(0, 5).map((exec) => ({
+    return items.slice(0, 20).map((exec) => ({
       id: exec.id,
       device: exec.device?.name ?? "Device",
       message: exec.status === "failed" ? t("failed") : t("timeout"),
