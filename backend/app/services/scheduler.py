@@ -2,7 +2,7 @@
 Backup scheduling service using APScheduler.
 """
 
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from app.core.timezone import now, get_timezone
 from typing import Optional
 
@@ -13,6 +13,9 @@ from app.core.database import SessionLocal
 from app.core.logging import get_backup_logger
 from app.core import backup_lock
 from app.models.schedule import BackupSchedule, ScheduleType
+from app.models.backup_execution import BackupExecution
+from app.models.audit_log import AuditLog
+from app.models.system_setting import SystemSetting
 from app.services.backup_executor import execute_backup
 from app.services.email import send_notification
 
@@ -145,6 +148,9 @@ def start_scheduler() -> None:
         scheduler.start()
         backup_logger.info("Scheduler started")
 
+    _register_retention_job(scheduler)
+    backup_logger.info("Retention cleanup job registered (daily at 03:00)")
+
     db = SessionLocal()
     try:
         schedules = db.query(BackupSchedule).filter(BackupSchedule.is_active == True).all()
@@ -206,3 +212,45 @@ def remove_schedule(schedule_id: str) -> None:
     scheduler = get_scheduler()
     if scheduler.get_job(schedule_id):
         scheduler.remove_job(schedule_id)
+
+
+def _run_retention_cleanup() -> None:
+    """Delete backup_executions and audit_logs older than audit_retention_days."""
+    db = SessionLocal()
+    try:
+        setting = db.query(SystemSetting).filter(SystemSetting.key == "audit_retention_days").first()
+        retention_days = int(setting.value) if setting and setting.value else 90
+        cutoff = now() - timedelta(days=retention_days)
+
+        deleted_executions = (
+            db.query(BackupExecution)
+            .filter(BackupExecution.created_at < cutoff)
+            .delete(synchronize_session=False)
+        )
+        deleted_audits = (
+            db.query(AuditLog)
+            .filter(AuditLog.created_at < cutoff)
+            .delete(synchronize_session=False)
+        )
+        db.commit()
+
+        backup_logger.info(
+            "Retention cleanup completed",
+            retention_days=retention_days,
+            deleted_executions=deleted_executions,
+            deleted_audits=deleted_audits,
+        )
+    except Exception as exc:
+        db.rollback()
+        backup_logger.error("Retention cleanup failed", error=str(exc))
+    finally:
+        db.close()
+
+
+def _register_retention_job(scheduler: BackgroundScheduler) -> None:
+    scheduler.add_job(
+        _run_retention_cleanup,
+        CronTrigger(hour=3, minute=0, timezone=get_timezone()),
+        id="__retention_cleanup__",
+        replace_existing=True,
+    )

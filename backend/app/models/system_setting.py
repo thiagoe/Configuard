@@ -30,7 +30,7 @@ DEFAULT_SETTINGS = {
     },
     "audit_retention_days": {
         "value": "90",
-        "description": "Número de dias para manter logs de auditoria"
+        "description": "Número de dias para manter logs de auditoria e histórico de coletas (backup_executions)"
     },
     # Email notification settings
     "email_enabled": {"value": "false", "description": "Habilitar notificações por email"},

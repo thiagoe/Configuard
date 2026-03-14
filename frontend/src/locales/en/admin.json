@@ -190,12 +190,12 @@
       "saved": "Backup retention saved successfully"
     },
     "audit": {
-      "title": "Audit Retention",
-      "desc": "Configure how long audit logs are kept",
+      "title": "Audit & Collection Retention",
+      "desc": "Configure how long audit logs and configuration collection history are kept",
       "label": "Retention Days",
-      "hint": "Audit logs older than this period will be automatically removed. Maximum value: 3650 days (10 years).",
+      "hint": "Audit logs and collection records older than this period will be automatically removed every night at 03:00. Maximum value: 3650 days (10 years).",
       "validationError": "Value must be between 1 and 3650 days",
-      "saved": "Audit retention saved successfully"
+      "saved": "Audit and collection retention saved successfully"
     },
     "save": "Save"
   },

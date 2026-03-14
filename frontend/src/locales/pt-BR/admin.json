@@ -190,12 +190,12 @@
       "saved": "Retenção de backup salva com sucesso"
     },
     "audit": {
-      "title": "Retenção de Auditoria",
-      "desc": "Configure por quanto tempo os logs de auditoria serão mantidos",
+      "title": "Retenção de Auditoria e Coletas",
+      "desc": "Configure por quanto tempo os logs de auditoria e o histórico de coletas de configuração serão mantidos",
       "label": "Dias de Retenção",
-      "hint": "Logs de auditoria mais antigos que este período serão removidos automaticamente. Valor máximo: 3650 dias (10 anos).",
+      "hint": "Logs de auditoria e registros de coleta mais antigos que este período serão removidos automaticamente toda madrugada (03:00). Valor máximo: 3650 dias (10 anos).",
       "validationError": "O valor deve estar entre 1 e 3650 dias",
-      "saved": "Retenção de auditoria salva com sucesso"
+      "saved": "Retenção de auditoria e coletas salva com sucesso"
     },
     "save": "Salvar"
   },
