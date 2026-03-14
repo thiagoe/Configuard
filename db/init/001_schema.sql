@@ -6,6 +6,7 @@
 -- =============================================
 
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
 -- =============================================
 -- ENUM TYPES
@@ -283,6 +284,10 @@ CREATE INDEX IF NOT EXISTS idx_configurations_hash           ON configurations(c
 -- (no stemming — preserves IP addresses, interface names, vendor-specific tokens)
 CREATE INDEX IF NOT EXISTS idx_configurations_fts
     ON configurations USING GIN (to_tsvector('simple', config_data));
+
+-- Trigram index accelerates ILIKE/regex fallbacks used by partial token searches
+CREATE INDEX IF NOT EXISTS idx_configurations_config_data_trgm
+    ON configurations USING GIN (config_data gin_trgm_ops);
 
 -- Backup schedules table
 CREATE TABLE IF NOT EXISTS backup_schedules (
