@@ -47,7 +47,11 @@ def _build_trigger(schedule: BackupSchedule) -> CronTrigger:
         if len(parts) != 5:
             raise ValueError("Cron expression must have 5 fields")
         minute, hour, day, month, day_of_week = parts
-        return CronTrigger(minute=minute, hour=hour, day=day, month=month, day_of_week=day_of_week, timezone=tz)
+        try:
+            trigger = CronTrigger(minute=minute, hour=hour, day=day, month=month, day_of_week=day_of_week, timezone=tz)
+        except Exception as exc:
+            raise ValueError(f"Invalid cron expression '{schedule.cron_expression}': {exc}") from exc
+        return trigger
 
     raise ValueError("Unsupported schedule type")
 
@@ -112,6 +116,7 @@ def _run_schedule(schedule_id: str) -> None:
                 execute_backup(db, device, schedule.user_id, scheduled=True, schedule_id=schedule_id)
                 send_notification(db, "backup_success", {"device_name": device.name})
             except Exception as exc:
+                db.rollback()
                 backup_logger.error(
                     "Scheduled backup failed",
                     schedule_id=schedule_id,

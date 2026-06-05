@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getErrorMessage } from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreateCredential, useCredentials, useDeleteCredential, useUpdateCredential } from "@/hooks/useCredentials";
 import { Credential, CredentialCreate, CredentialUpdate } from "@/services/credentials";
@@ -95,7 +96,7 @@ const Credentials = () => {
             toast.success(t("credentials.updated"));
             closeDialog();
           },
-          onError: (error: any) => toast.error(error.response?.data?.detail || error.message),
+          onError: (error: unknown) => toast.error(getErrorMessage(error)),
         }
       );
       return;
@@ -116,7 +117,7 @@ const Credentials = () => {
         toast.success(t("credentials.created"));
         closeDialog();
       },
-      onError: (error: any) => toast.error(error.response?.data?.detail || error.message),
+      onError: (error: unknown) => toast.error(getErrorMessage(error)),
     });
   };
 
@@ -124,7 +125,7 @@ const Credentials = () => {
     if (!confirm(t("credentials.confirmDelete"))) return;
     deleteMutation.mutate(id, {
       onSuccess: () => toast.success(t("credentials.deleted")),
-      onError: (error: any) => toast.error(error.response?.data?.detail || error.message),
+      onError: (error: unknown) => toast.error(getErrorMessage(error)),
     });
   };
 

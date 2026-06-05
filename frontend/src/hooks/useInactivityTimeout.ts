@@ -41,6 +41,8 @@ export function useInactivityTimeout({
   const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
+  // Ref mirrors showWarning state so handleActivity never captures a stale closure value
+  const showWarningRef = useRef(false);
 
   // Timeout in milliseconds
   const timeoutMs = INACTIVITY_TIMEOUT_MINUTES * 60 * 1000;
@@ -58,6 +60,7 @@ export function useInactivityTimeout({
   }, []);
 
   const startCountdown = useCallback(() => {
+    showWarningRef.current = true;
     setShowWarning(true);
     setRemainingSeconds(WARNING_BEFORE_LOGOUT_SECONDS);
 
@@ -77,6 +80,7 @@ export function useInactivityTimeout({
     if (!enabled || INACTIVITY_TIMEOUT_MINUTES <= 0) return;
 
     clearTimers();
+    showWarningRef.current = false;
     setShowWarning(false);
     setRemainingSeconds(WARNING_BEFORE_LOGOUT_SECONDS);
     lastActivityRef.current = Date.now();
@@ -91,14 +95,14 @@ export function useInactivityTimeout({
     resetTimer();
   }, [resetTimer]);
 
-  // Handle user activity
+  // Handle user activity — reads ref to avoid stale closure on showWarning state
   const handleActivity = useCallback(() => {
     // Only reset if warning is not showing
     // If warning is showing, user must click "Continue" button
-    if (!showWarning) {
+    if (!showWarningRef.current) {
       resetTimer();
     }
-  }, [showWarning, resetTimer]);
+  }, [resetTimer]);
 
   // Set up activity listeners
   useEffect(() => {

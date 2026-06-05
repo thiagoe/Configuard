@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DeviceCreate, DeviceUpdate, updateDevice } from "@/services/devices";
 import { getBrands, Brand } from "@/services/brands";
@@ -8,6 +8,7 @@ import { useCredentials } from "@/hooks/useCredentials";
 import { getTemplates, BackupTemplate } from "@/services/templates";
 import { getDeviceModels, DeviceModel } from "@/services/deviceModels";
 import { useDevices, useCreateDevice, useUpdateDevice, useDeleteDevice, useExecuteDeviceBackup } from "@/hooks/useDevices";
+import { getErrorMessage } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -112,6 +113,13 @@ const DeviceList = () => {
     retention_versions: 10,
   });
   const [globalRetention, setGlobalRetention] = useState(10);
+
+  // Guard: prevents state updates after component unmounts (e.g. during navigation mid-mutation)
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   // Auxiliary lists — brands, categories, models always loaded (used in filters too)
   const { data: brands = [] } = useQuery({
@@ -218,11 +226,16 @@ const DeviceList = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const parsedPort = parseInt(formData.port, 10);
+    if (isNaN(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
+      toast.error(t("validation.invalidPort"));
+      return;
+    }
     const deviceData: DeviceCreate = {
       name: formData.name,
       ip_address: formData.ip_address,
       hostname: formData.hostname || undefined,
-      port: parseInt(formData.port),
+      port: parsedPort,
       brand_id: formData.brand_id || undefined,
       category_id: formData.category_id || undefined,
       model_id: formData.model_id || undefined,
@@ -234,6 +247,7 @@ const DeviceList = () => {
     };
     createMutation.mutate(deviceData, {
       onSuccess: () => {
+        if (!mountedRef.current) return;
         toast.success(t("toast.added"));
         setDialogOpen(false);
         setFormData({
@@ -252,8 +266,9 @@ const DeviceList = () => {
           retention_versions: globalRetention,
         });
       },
-      onError: (error: any) => {
-        toast.error(error.response?.data?.detail || error.message);
+      onError: (error: unknown) => {
+        if (!mountedRef.current) return;
+        toast.error(getErrorMessage(error));
       },
     });
   };
@@ -265,12 +280,15 @@ const DeviceList = () => {
     setRunningDeviceId(deviceId);
     executeBackupMutation.mutate(deviceId, {
       onSuccess: () => {
+        if (!mountedRef.current) return;
         toast.success(t("toast.backupSuccess"));
       },
-      onError: (error: any) => {
-        toast.error(error.response?.data?.detail || error.message);
+      onError: (error: unknown) => {
+        if (!mountedRef.current) return;
+        toast.error(getErrorMessage(error));
       },
       onSettled: () => {
+        if (!mountedRef.current) return;
         setRunningDeviceId(null);
       },
     });
@@ -285,12 +303,14 @@ const DeviceList = () => {
     if (!deviceToDelete) return;
     deleteMutation.mutate(deviceToDelete.id, {
       onSuccess: () => {
+        if (!mountedRef.current) return;
         toast.success(t("toast.deleted"));
         setDeleteDialogOpen(false);
         setDeviceToDelete(null);
       },
-      onError: (error: any) => {
-        toast.error(error.response?.data?.detail || error.message);
+      onError: (error: unknown) => {
+        if (!mountedRef.current) return;
+        toast.error(getErrorMessage(error));
       },
     });
   };
@@ -323,11 +343,17 @@ const DeviceList = () => {
     e.preventDefault();
     if (!editingDevice) return;
 
+    const parsedPort = parseInt(editFormData.port, 10);
+    if (isNaN(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
+      toast.error(t("validation.invalidPort"));
+      return;
+    }
+
     const deviceData: DeviceUpdate = {
       name: editFormData.name,
       ip_address: editFormData.ip_address,
       hostname: editFormData.hostname || undefined,
-      port: parseInt(editFormData.port),
+      port: parsedPort,
       brand_id: editFormData.brand_id || null,
       category_id: editFormData.category_id || null,
       model_id: editFormData.model_id || null,
@@ -342,13 +368,15 @@ const DeviceList = () => {
       { id: editingDevice.id, data: deviceData },
       {
         onSuccess: () => {
+          if (!mountedRef.current) return;
           toast.success(t("toast.updated"));
           setEditDialogOpen(false);
           setEditingDevice(null);
           queryClient.invalidateQueries({ queryKey: ["devices"] });
         },
-        onError: (error: any) => {
-          toast.error(error.response?.data?.detail || error.message);
+        onError: (error: unknown) => {
+          if (!mountedRef.current) return;
+          toast.error(getErrorMessage(error));
         },
       }
     );
@@ -402,29 +430,29 @@ const DeviceList = () => {
 
     createMutation.mutate(cloneData, {
       onSuccess: () => {
+        if (!mountedRef.current) return;
         toast.success(t("toast.cloned", { name: device.name }));
         clearSelection();
       },
-      onError: (error: any) => {
-        toast.error(error.response?.data?.detail || error.message);
+      onError: (error: unknown) => {
+        if (!mountedRef.current) return;
+        toast.error(getErrorMessage(error));
       },
     });
   };
 
-  // Bulk delete
+  // Bulk delete — Promise.allSettled ensures all deletions are attempted regardless of partial failures
   const handleBulkDelete = async () => {
     const deviceIds = Array.from(selectedDevices);
-    let successCount = 0;
-    let errorCount = 0;
 
-    for (const id of deviceIds) {
-      try {
-        await deleteMutation.mutateAsync(id);
-        successCount++;
-      } catch {
-        errorCount++;
-      }
-    }
+    const results = await Promise.allSettled(
+      deviceIds.map((id) => deleteMutation.mutateAsync(id))
+    );
+
+    const successCount = results.filter((r) => r.status === "fulfilled").length;
+    const errorCount = results.filter((r) => r.status === "rejected").length;
+
+    if (!mountedRef.current) return;
 
     if (successCount > 0) {
       toast.success(t("toast.bulkDeleted", { count: successCount }));

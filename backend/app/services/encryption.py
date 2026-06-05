@@ -29,20 +29,18 @@ class EncryptionService:
         """
         key_hex = key or settings.ENCRYPTION_KEY
 
-        # Convert hex key to bytes (should be 32 bytes for AES-256)
+        # Convert hex key to bytes (must be exactly 64 hex chars = 32 bytes for AES-256)
         try:
-            if len(key_hex) == 64:
-                # Hex-encoded 32-byte key
-                self.key = bytes.fromhex(key_hex)
-            elif len(key_hex) == 32:
-                # Raw 32-byte string (not recommended but supported)
-                self.key = key_hex.encode()
-            else:
-                # Use SHA-256 to derive a proper key from any string
-                import hashlib
-                self.key = hashlib.sha256(key_hex.encode()).digest()
-
+            if len(key_hex) != 64:
+                raise ValueError(
+                    f"ENCRYPTION_KEY must be exactly 64 hexadecimal characters (32 bytes). "
+                    f"Got {len(key_hex)} characters. "
+                    f"Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+                )
+            self.key = bytes.fromhex(key_hex)
             self.aesgcm = AESGCM(self.key)
+        except ValueError:
+            raise
         except Exception as e:
             logger.error(f"Failed to initialize encryption service: {e}")
             raise ValueError("Invalid encryption key")

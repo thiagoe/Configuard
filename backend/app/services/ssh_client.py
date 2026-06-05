@@ -445,42 +445,46 @@ class SSHClientWrapper:
         last_recv_time = start  # Track when we last received data
         idle_threshold = 1.0  # Wait 1s of no data before checking prompt
 
-        while True:
-            if time.monotonic() - start > timeout:
-                tail = buffer[-500:] if buffer else ""
-                raise TimeoutError(f"Command timed out. Last output: {tail}")
+        try:
+            while True:
+                if time.monotonic() - start > timeout:
+                    tail = buffer[-500:] if buffer else ""
+                    raise TimeoutError(f"Command timed out. Last output: {tail}")
 
-            if self.channel.recv_ready():
-                chunk = self.channel.recv(4096).decode(errors="ignore")
-                buffer += chunk
-                last_recv_time = time.monotonic()  # Reset idle timer
-                if on_data:
-                    on_data(chunk)
-                if on_debug and chunk:
-                    on_debug(f"SSH recv {len(chunk)} bytes")
+                if self.channel.recv_ready():
+                    chunk = self.channel.recv(4096).decode(errors="ignore")
+                    buffer += chunk
+                    last_recv_time = time.monotonic()  # Reset idle timer
+                    if on_data:
+                        on_data(chunk)
+                    if on_debug and chunk:
+                        on_debug(f"SSH recv {len(chunk)} bytes")
 
-                if pagination_regex and pagination_regex.search(buffer):
-                    buffer = pagination_regex.sub("", buffer)
-                    self.channel.send(pagination_key)
-                    if on_debug:
-                        on_debug(f"SSH paginação detectada (pattern='{pagination_pattern}'), enviando tecla")
-                    continue
-            else:
-                # Only check for prompt after a period of no data (device finished sending)
-                idle_time = time.monotonic() - last_recv_time
-                if idle_time >= idle_threshold and buffer:
-                    # Check for prompt only in the last line of the buffer
-                    # This prevents false matches in the middle of command output
-                    last_line = buffer.rstrip().rsplit("\n", 1)[-1]
-                    if prompt_regex.search(last_line):
+                    if pagination_regex and pagination_regex.search(buffer):
+                        buffer = pagination_regex.sub("", buffer)
+                        self.channel.send(pagination_key)
                         if on_debug:
-                            on_debug(f"SSH prompt detectado (pattern='{prompt_pattern}') após {idle_time:.2f}s idle — comando concluído")
-                        break
+                            on_debug(f"SSH paginação detectada (pattern='{pagination_pattern}'), enviando tecla")
+                        continue
+                else:
+                    # Only check for prompt after a period of no data (device finished sending)
+                    idle_time = time.monotonic() - last_recv_time
+                    if idle_time >= idle_threshold and buffer:
+                        # Check for prompt only in the last line of the buffer
+                        # This prevents false matches in the middle of command output
+                        last_line = buffer.rstrip().rsplit("\n", 1)[-1]
+                        if prompt_regex.search(last_line):
+                            if on_debug:
+                                on_debug(f"SSH prompt detectado (pattern='{prompt_pattern}') após {idle_time:.2f}s idle — comando concluído")
+                            break
 
-                if on_debug and time.monotonic() - last_debug > 5:
-                    on_debug(f"SSH waiting for data... elapsed={int(time.monotonic() - start)}s")
-                    last_debug = time.monotonic()
-                time.sleep(0.05)
+                    if on_debug and time.monotonic() - last_debug > 5:
+                        on_debug(f"SSH waiting for data... elapsed={int(time.monotonic() - start)}s")
+                        last_debug = time.monotonic()
+                    time.sleep(0.05)
+        except TimeoutError:
+            self.channel.close()
+            raise
 
         return buffer
 

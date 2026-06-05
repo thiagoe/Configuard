@@ -64,6 +64,19 @@ def _clean_output(text: str, prompt_pattern: str, cleanup_patterns: Optional[str
     # Remove trailing spaces from each line
     lines = [line.rstrip() for line in text.split('\n')]
 
+    # Strip terminal column-alignment padding from lines with anomalous leading whitespace.
+    # Devices like Huawei VRP produce lines padded with 15-20 spaces due to \r-based
+    # terminal overwrite (the cursor returns to column 0, then spaces fill the old content).
+    # Detection: if the file has lines with ≤1-space indent mixed with lines >3-space indent,
+    # the large-indent lines are artifacts — strip them to lstrip() (they are root-level content).
+    non_empty = [l for l in lines if l.strip()]
+    if non_empty:
+        indents = [len(l) - len(l.lstrip()) for l in non_empty]
+        has_low = any(i <= 1 for i in indents)
+        has_high = any(i > 3 for i in indents)
+        if has_low and has_high:
+            lines = [l.lstrip() if (l.strip() and (len(l) - len(l.lstrip())) > 3) else l for l in lines]
+
     # Remove empty lines at start/end
     while lines and not lines[0].strip():
         lines.pop(0)
@@ -380,6 +393,7 @@ def execute_backup(
             line_ending=line_ending,
         )
 
+    client = None
     try:
         if is_telnet:
             if not password:
@@ -604,8 +618,14 @@ def execute_backup(
                 )
                 outputs.append(output)
 
-        client.close()
+        if client is not None:
+            client.close()
     except Exception as exc:
+        if client is not None:
+            try:
+                client.close()
+            except Exception:
+                pass
         execution_completed_at = now()
         duration = int((execution_completed_at - execution_started_at).total_seconds())
 

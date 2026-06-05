@@ -6,15 +6,13 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
 // API base URL from environment
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
-// Storage keys
+// Storage keys — sessionStorage: tokens die when the tab closes, not readable cross-tab
 const ACCESS_TOKEN_KEY = 'access_token';
-const USER_ID_KEY = 'user_id';
 
-export const getUserId = (): string | null => localStorage.getItem(USER_ID_KEY);
-export const setUserId = (id: string): void => localStorage.setItem(USER_ID_KEY, id);
-export const clearUserId = (): void => localStorage.removeItem(USER_ID_KEY);
+// Custom event used by the 401 interceptor to signal AuthContext without hard redirect
+export const AUTH_EXPIRED_EVENT = 'auth:expired';
 
 // Create axios instance
 const api: AxiosInstance = axios.create({
@@ -25,30 +23,25 @@ const api: AxiosInstance = axios.create({
   timeout: 30000,
 });
 
-// Token management
+// Token management — sessionStorage keeps tokens out of XSS-reachable persistent storage
 export const getAccessToken = (): string | null => {
-  return localStorage.getItem(ACCESS_TOKEN_KEY);
+  return sessionStorage.getItem(ACCESS_TOKEN_KEY);
 };
 
 export const setTokens = (accessToken: string): void => {
-  localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+  sessionStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
 };
 
 export const clearTokens = (): void => {
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  clearUserId();
+  sessionStorage.removeItem(ACCESS_TOKEN_KEY);
 };
 
-// Request interceptor - add auth token and user identity
+// Request interceptor - add auth token
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    }
-    const userId = getUserId();
-    if (userId) {
-      config.headers['X-User-Id'] = userId;
     }
     return config;
   },
@@ -57,13 +50,18 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - on 401, clear tokens and redirect to login
+// Response interceptor - on 401, emit event so AuthContext handles cleanup + navigation
+let _authExpiredDispatched = false;
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    _authExpiredDispatched = false;
+    return response;
+  },
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !_authExpiredDispatched) {
+      _authExpiredDispatched = true;
       clearTokens();
-      window.location.href = '/auth';
+      window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT));
     }
     return Promise.reject(error);
   }

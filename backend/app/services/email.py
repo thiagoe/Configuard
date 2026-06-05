@@ -161,7 +161,10 @@ def _send_smtp(cfg: dict, recipients: list[str], subject: str, body: str) -> Non
             server.login(username, password)
         server.sendmail(msg["From"], recipients, msg.as_string())
     finally:
-        server.quit()
+        try:
+            server.quit()
+        except Exception:
+            pass
 
 
 def test_email_connection(db: Session) -> dict:

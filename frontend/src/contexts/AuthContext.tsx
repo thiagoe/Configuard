@@ -4,8 +4,9 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User, login as loginService, logout as logoutService, getCurrentUser } from '@/services/auth';
-import { getAccessToken, clearTokens } from '@/services/api';
+import { getAccessToken, clearTokens, AUTH_EXPIRED_EVENT } from '@/services/api';
 import { useInactivityTimeout } from '@/hooks/useInactivityTimeout';
 import { InactivityWarningDialog } from '@/components/InactivityWarningDialog';
 import { toast } from 'sonner';
@@ -27,6 +28,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [locale, setLocale] = useState<string>(
@@ -39,8 +41,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     i18n.changeLanguage(lang);
   }, []);
 
-  // Logout handler for inactivity
-  const handleInactivityLogout = useCallback(async () => {
+  // Shared cleanup used by both inactivity logout and token expiry event
+  const handleExpiredSession = useCallback(async (showToast: boolean) => {
     try {
       await logoutService();
     } catch {
@@ -50,9 +52,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     clearTokens();
     localStorage.removeItem('configuard_device_search');
     localStorage.removeItem('configuard_template_search');
-    toast.info(i18n.t('sessionExpired'));
-    window.location.href = '/auth';
-  }, []);
+    if (showToast) toast.info(i18n.t('sessionExpired'));
+    navigate('/auth', { replace: true });
+  }, [navigate]);
+
+  // Listen for 401 events emitted by the axios interceptor
+  useEffect(() => {
+    const handler = () => handleExpiredSession(false);
+    window.addEventListener(AUTH_EXPIRED_EVENT, handler);
+    return () => window.removeEventListener(AUTH_EXPIRED_EVENT, handler);
+  }, [handleExpiredSession]);
+
+  // Logout handler for inactivity
+  const handleInactivityLogout = useCallback(() => {
+    handleExpiredSession(true);
+  }, [handleExpiredSession]);
 
   // Inactivity timeout hook
   const {

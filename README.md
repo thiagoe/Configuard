@@ -73,10 +73,9 @@ cd configuard
 
 # 2. Configure environment variables
 cp .env.example .env
-# Edit .env and set secure values for DB_PASSWORD, API_TOKEN and ENCRYPTION_KEY
+# Edit .env — set DB_PASSWORD, API_TOKEN and ENCRYPTION_KEY to secure values
 
 # 3. Start everything
-#    Builds images, starts containers, applies migrations and seeds initial data
 docker compose up -d --build
 
 # 4. Open the browser
@@ -105,7 +104,7 @@ Rebuild after code changes:
 ./scripts/reload.sh backend    # backend only (picks up new Python dependencies)
 ```
 
-> The backend container runs `uvicorn --reload`, so Python code changes are picked up automatically without a restart. Use `reload.sh backend` only when you add/remove Python dependencies.
+> The backend container runs `uvicorn --reload`, so Python code changes are picked up automatically without a restart. Use `reload.sh backend` only when you add or remove Python dependencies.
 
 ---
 
@@ -122,7 +121,7 @@ cd backend
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env        # edit DB_HOST=localhost and secrets
+cp .env.example .env        # edit: DB_HOST=localhost, secrets
 uvicorn main:app --reload --port 8000
 
 # 3. Frontend (new terminal)
@@ -132,57 +131,70 @@ cp .env.example .env        # VITE_API_URL=http://localhost:8000/api
 npm run dev                 # http://localhost:5173
 ```
 
-Alternatively, the helper script automates all of the above:
-
-```bash
-./scripts/start.sh all        # starts db + backend + frontend
-./scripts/start.sh frontend   # frontend only
-./scripts/stop.sh all
-./scripts/status.sh
-```
-
 ---
 
 ## Configuration
 
-### Backend — `backend/.env`
+### Root `.env` (Docker mode)
+
+Used by `docker-compose.yml`. Copy `.env.example` to `.env` and set secure values.
 
 ```bash
-# Application
-APP_NAME=Configuard
-DEBUG=false                          # true → verbose SSH/Telnet session logs
+# Database
+DB_NAME=configuard
+DB_USER=configuard
+DB_PASSWORD=TROQUE_PELA_SENHA_DO_BANCO
+DB_PORT=5432
+
+# Backend
+DEBUG=false
 ENVIRONMENT=production
 
-# Server
-HOST=0.0.0.0
-PORT=8000
+# Static API token for internal service communication
+# Generate: openssl rand -hex 32
+API_TOKEN=TROQUE_POR_TOKEN_SEGURO
 
-# Database (PostgreSQL)
-DB_HOST=postgresql                   # service name in docker-compose; use localhost for local dev
-DB_PORT=5432
-DB_USER=configuard
-DB_PASSWORD=configuard123            # change in production
-DB_NAME=configuard
-
-# JWT — MUST be changed in production
-JWT_SECRET_KEY=your-secret-key-min-32-characters
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES=15
-JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
-
-# Encryption key for stored credentials (64 hex chars = 32 bytes)
-# Generate with: python -c "import secrets; print(secrets.token_hex(32))"
+# AES-256 encryption key — exactly 64 hex characters
+# Generate: openssl rand -hex 32
 ENCRYPTION_KEY=0000000000000000000000000000000000000000000000000000000000000000
 
-# CORS (comma-separated; in Docker mode the nginx proxy handles this)
-CORS_ORIGINS_STR=http://localhost:5173,http://localhost:8080
+# CORS origins (comma-separated; in Docker the nginx proxy handles this)
+CORS_ORIGINS_STR=http://localhost:8080
 
-# Timezone — affects all stored timestamps
+# Timezone
 TIMEZONE=America/Sao_Paulo
 
 # Logging
 LOG_LEVEL=INFO
-LOG_DIR=logs
 LOG_RETENTION_DAYS=30
+
+# Exposed host ports
+BACKEND_PORT=8000
+FRONTEND_PORT=8080
+```
+
+### Backend — `backend/.env` (local dev only)
+
+```bash
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=configuard
+DB_PASSWORD=configuard123
+DB_NAME=configuard
+
+# JWT — MUST be changed in production (min 32 chars)
+JWT_SECRET_KEY=your-secret-key-min-32-characters
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=15
+JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
+
+# AES-256 encryption key (64 hex chars = 32 bytes)
+# Generate: openssl rand -hex 32
+ENCRYPTION_KEY=0000000000000000000000000000000000000000000000000000000000000000
+
+CORS_ORIGINS_STR=http://localhost:5173,http://localhost:8080
+TIMEZONE=America/Sao_Paulo
+LOG_LEVEL=INFO
+LOG_DIR=logs
 ```
 
 ### Frontend — `frontend/.env`
@@ -223,6 +235,7 @@ A template defines how Configuard connects to a device and what commands to run 
 | Setting | Description |
 | --- | --- |
 | `prompt_pattern` | Regex to detect the device shell prompt (e.g. `[#>$]`) |
+| `login_success_pattern` | Separate regex for post-login detection only (falls back to `prompt_pattern` if unset) |
 | `login_prompt` | String to wait for during the login sequence |
 | `password_prompt` | String to wait for when the device asks for the password |
 | `pagination_pattern` | Regex for "press space for more" prompts (e.g. `--More--`) |
@@ -231,6 +244,26 @@ A template defines how Configuard connects to a device and what commands to run 
 | `output_cleanup_patterns` | Regex patterns (one per line) to strip from the final output |
 | `connection_timeout` | Seconds to wait for the SSH/Telnet connection |
 | `command_timeout` | Seconds to wait for each command response |
+| `transport_options` | JSONB object with Telnet sync behavior (see below) |
+
+### Telnet transport options
+
+Per-template JSON configuration for devices that require terminal synchronization after login:
+
+```json
+{
+  "telnet_sync": {
+    "enabled": true,
+    "idle_ms": 400,
+    "settle_ms": 500,
+    "after_login": true,
+    "enter_count": 2,
+    "before_commands": []
+  }
+}
+```
+
+Useful for devices (e.g. TP-Link) that emit async audit logs immediately after login with no newline.
 
 ### Step types (advanced mode — `use_steps = true`)
 
@@ -295,10 +328,10 @@ All scripts live in `scripts/` and are run from the project root.
 
 | Command | Description |
 | --- | --- |
+| `./scripts/reload.sh [all\|frontend\|backend]` | Rebuild and reload in Docker container mode |
 | `./scripts/start.sh [all\|db\|backend\|frontend]` | Start services in local dev mode |
 | `./scripts/stop.sh [all\|db\|backend\|frontend]` | Stop local dev services |
 | `./scripts/status.sh` | Show running status and URLs |
-| `./scripts/reload.sh [all\|frontend\|backend]` | Rebuild and reload in Docker container mode |
 
 ---
 
@@ -310,18 +343,6 @@ Interactive API documentation:
 - **ReDoc:** `http://localhost:8000/api/redoc`
 
 All protected endpoints require `Authorization: Bearer <access_token>`.
-
----
-
-## Security notes
-
-- **Credentials** are encrypted with AES-256-GCM before storage. The `ENCRYPTION_KEY` in `backend/.env` must be kept secret and backed up — losing it means losing access to all stored credentials.
-- **JWT secret** (`JWT_SECRET_KEY`) must be at least 32 characters and changed from the example value before any production deployment.
-- **Default admin password** (`Admin@123`) must be changed immediately after the first login.
-- **LDAP bind password** is also stored encrypted with the same key.
-- **Roles** are stored only in the `user_roles` table — never in JWT tokens or `localStorage`.
-- All SQL queries use parameterized statements; user input is never interpolated into raw SQL.
-- CORS is restricted to the origins defined in `CORS_ORIGINS_STR`.
 
 ---
 
@@ -347,6 +368,18 @@ To import: go to **Backup Templates → Import** and select the desired file.
 
 ---
 
+## Security notes
+
+- **Credentials** are encrypted with AES-256-GCM before storage. The `ENCRYPTION_KEY` must be kept secret and backed up — losing it means losing access to all stored credentials.
+- **JWT secret** (`JWT_SECRET_KEY`) must be at least 32 characters and changed from the example value before any production deployment.
+- **Default admin password** (`Admin@123`) must be changed immediately after the first login.
+- **LDAP bind password** is also stored encrypted with the same key.
+- **Roles** are stored only in the `user_roles` table — never in JWT tokens or browser storage.
+- All SQL queries use parameterized statements; user input is never interpolated into raw SQL.
+- CORS is restricted to the origins defined in `CORS_ORIGINS_STR`.
+
+---
+
 ## Contributing
 
 Bug reports and feature requests are welcome via [Issues](../../issues).
@@ -366,12 +399,12 @@ O Configuard é uma aplicação web auto-hospedada para gerenciamento centraliza
 - [Recursos](#recursos)
 - [Requisitos](#requisitos)
 - [Início rápido](#início-rápido)
-- [Configuração](#configuração)
+- [Configuração PT](#configuração-pt)
 - [Papéis de usuário](#papéis-de-usuário)
 - [Templates de backup](#templates-de-backup)
 - [Agendamentos](#agendamentos)
 - [Busca](#busca)
-- [Referência dos scripts](#referência-dos-scripts)
+- [Referência dos scripts PT](#referência-dos-scripts-pt)
 - [API](#api-1)
 - [Templates de exemplo](#templates-de-exemplo)
 - [Segurança](#segurança)
@@ -428,10 +461,9 @@ cd configuard
 
 # 2. Configure as variáveis de ambiente
 cp .env.example .env
-# Edite o .env e defina valores seguros para DB_PASSWORD, API_TOKEN e ENCRYPTION_KEY
+# Edite o .env — defina valores seguros para DB_PASSWORD, API_TOKEN e ENCRYPTION_KEY
 
 # 3. Suba tudo
-#    Constrói imagens, inicia containers, aplica migrações e popula dados iniciais
 docker compose up -d --build
 
 # 4. Abra no navegador
@@ -460,50 +492,95 @@ Rebuild após mudanças no código:
 ./scripts/reload.sh backend    # só backend (necessário ao adicionar dependências Python)
 ```
 
-> O container do backend roda `uvicorn --reload`, então mudanças no código Python são detectadas automaticamente sem reiniciar. Use `reload.sh backend` apenas ao adicionar/remover dependências Python.
+> O container do backend roda `uvicorn --reload`, então mudanças no código Python são detectadas automaticamente sem reiniciar. Use `reload.sh backend` apenas ao adicionar ou remover dependências Python.
 
 ---
 
-### Configuração
-
-#### Backend — `backend/.env`
+#### Desenvolvimento local
 
 ```bash
-# Aplicação
-APP_NAME=Configuard
-DEBUG=false                          # true → logs detalhados da sessão SSH/Telnet
+# 1. Suba apenas o banco de dados
+docker compose up -d postgresql
+
+# 2. Backend (novo terminal)
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env        # edite: DB_HOST=localhost e secrets
+uvicorn main:app --reload --port 8000
+
+# 3. Frontend (novo terminal)
+cd frontend
+npm install
+cp .env.example .env        # VITE_API_URL=http://localhost:8000/api
+npm run dev                 # http://localhost:5173
+```
+
+---
+
+### Configuração PT
+
+#### `.env` raiz (modo Docker)
+
+Usado pelo `docker-compose.yml`. Copie `.env.example` para `.env` e defina valores seguros.
+
+```bash
+# Banco de dados
+DB_NAME=configuard
+DB_USER=configuard
+DB_PASSWORD=TROQUE_PELA_SENHA_DO_BANCO
+DB_PORT=5432
+
+# Backend
+DEBUG=false
 ENVIRONMENT=production
 
-# Servidor
-HOST=0.0.0.0
-PORT=8000
+# Token estático para comunicação interna entre serviços
+# Gerar: openssl rand -hex 32
+API_TOKEN=TROQUE_POR_TOKEN_SEGURO
 
-# Banco de dados (PostgreSQL)
-DB_HOST=postgresql                   # nome do serviço no docker-compose; use localhost para dev local
-DB_PORT=5432
-DB_USER=configuard
-DB_PASSWORD=configuard123            # altere em produção
-DB_NAME=configuard
-
-# JWT — DEVE ser alterado em produção
-JWT_SECRET_KEY=sua-chave-secreta-minimo-32-caracteres
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES=15
-JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
-
-# Chave de criptografia para credenciais armazenadas (64 hex chars = 32 bytes)
-# Gerar com: python -c "import secrets; print(secrets.token_hex(32))"
+# Chave de criptografia AES-256 — exatamente 64 caracteres hexadecimais
+# Gerar: openssl rand -hex 32
 ENCRYPTION_KEY=0000000000000000000000000000000000000000000000000000000000000000
 
-# CORS (separado por vírgula; no modo Docker o proxy nginx cuida disso)
-CORS_ORIGINS_STR=http://localhost:5173,http://localhost:8080
+# CORS (no modo Docker, o proxy nginx cuida disso)
+CORS_ORIGINS_STR=http://localhost:8080
 
-# Fuso horário — afeta todos os timestamps armazenados
+# Fuso horário
 TIMEZONE=America/Sao_Paulo
 
 # Logs
 LOG_LEVEL=INFO
-LOG_DIR=logs
 LOG_RETENTION_DAYS=30
+
+# Portas expostas no host
+BACKEND_PORT=8000
+FRONTEND_PORT=8080
+```
+
+#### Backend — `backend/.env` (apenas dev local)
+
+```bash
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=configuard
+DB_PASSWORD=configuard123
+DB_NAME=configuard
+
+# JWT — DEVE ser alterado em produção (mínimo 32 chars)
+JWT_SECRET_KEY=sua-chave-secreta-minimo-32-caracteres
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=15
+JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
+
+# Chave de criptografia AES-256 (64 hex chars = 32 bytes)
+# Gerar: openssl rand -hex 32
+ENCRYPTION_KEY=0000000000000000000000000000000000000000000000000000000000000000
+
+CORS_ORIGINS_STR=http://localhost:5173,http://localhost:8080
+TIMEZONE=America/Sao_Paulo
+LOG_LEVEL=INFO
+LOG_DIR=logs
 ```
 
 #### Frontend — `frontend/.env`
@@ -544,6 +621,7 @@ Um template define como o Configuard se conecta a um dispositivo e quais comando
 | Configuração | Descrição |
 | --- | --- |
 | `prompt_pattern` | Regex para detectar o prompt do dispositivo (ex: `[#>$]`) |
+| `login_success_pattern` | Regex separado usado apenas para detecção pós-login (fallback para `prompt_pattern` se não definido) |
 | `login_prompt` | String a aguardar durante a sequência de login |
 | `password_prompt` | String a aguardar quando o dispositivo pede a senha |
 | `pagination_pattern` | Regex para prompts de paginação (ex: `--More--`) |
@@ -552,6 +630,26 @@ Um template define como o Configuard se conecta a um dispositivo e quais comando
 | `output_cleanup_patterns` | Padrões regex (um por linha) para remover da saída final |
 | `connection_timeout` | Segundos para aguardar a conexão SSH/Telnet |
 | `command_timeout` | Segundos para aguardar a resposta de cada comando |
+| `transport_options` | Objeto JSONB com comportamento de sincronização Telnet (ver abaixo) |
+
+#### Opções de transporte Telnet
+
+Configuração JSON por template para dispositivos que exigem sincronização do terminal após login:
+
+```json
+{
+  "telnet_sync": {
+    "enabled": true,
+    "idle_ms": 400,
+    "settle_ms": 500,
+    "after_login": true,
+    "enter_count": 2,
+    "before_commands": []
+  }
+}
+```
+
+Útil para dispositivos (ex: TP-Link) que emitem logs de auditoria assíncronos imediatamente após o login sem nova linha.
 
 #### Tipos de etapa (modo avançado — `use_steps = true`)
 
@@ -610,16 +708,16 @@ Os resultados exibem as linhas correspondentes com destaque de sintaxe e links p
 
 ---
 
-### Referência dos scripts
+### Referência dos scripts PT
 
 Todos os scripts ficam em `scripts/` e são executados a partir da raiz do projeto.
 
 | Comando | Descrição |
 | --- | --- |
+| `./scripts/reload.sh [all\|frontend\|backend]` | Rebuild e reload no modo container Docker |
 | `./scripts/start.sh [all\|db\|backend\|frontend]` | Inicia os serviços em modo dev local |
 | `./scripts/stop.sh [all\|db\|backend\|frontend]` | Para os serviços em modo dev local |
 | `./scripts/status.sh` | Exibe o status dos serviços e as URLs |
-| `./scripts/reload.sh [all\|frontend\|backend]` | Rebuild e reload no modo container Docker |
 
 ---
 
@@ -658,11 +756,11 @@ Para importar: acesse **Templates de Backup → Importar** e selecione o arquivo
 
 ### Segurança
 
-- **Credenciais** são criptografadas com AES-256-GCM antes do armazenamento. A `ENCRYPTION_KEY` em `backend/.env` deve ser mantida em segredo e ter backup — perdê-la significa perder o acesso a todas as credenciais armazenadas.
+- **Credenciais** são criptografadas com AES-256-GCM antes do armazenamento. A `ENCRYPTION_KEY` deve ser mantida em segredo e ter backup — perdê-la significa perder o acesso a todas as credenciais armazenadas.
 - **Segredo JWT** (`JWT_SECRET_KEY`) deve ter pelo menos 32 caracteres e ser alterado do valor de exemplo antes de qualquer deploy em produção.
 - **Senha padrão do admin** (`Admin@123`) deve ser alterada imediatamente após o primeiro login.
 - **Senha de bind LDAP** também é armazenada criptografada com a mesma chave.
-- **Papéis** são armazenados apenas na tabela `user_roles` — nunca em tokens JWT ou `localStorage`.
+- **Papéis** são armazenados apenas na tabela `user_roles` — nunca em tokens JWT ou no armazenamento do navegador.
 - Todas as queries SQL usam statements parametrizados; entradas do usuário nunca são interpoladas em SQL cru.
 - CORS é restrito às origens definidas em `CORS_ORIGINS_STR`.
 

@@ -3,7 +3,7 @@
  * Handles login and logout using a static API token
  */
 
-import api, { setTokens, clearTokens, setUserId, getErrorMessage } from './api';
+import api, { setTokens, clearTokens, getErrorMessage } from './api';
 
 export interface User {
   id: string;
@@ -32,9 +32,6 @@ export const login = async (credentials: LoginCredentials): Promise<AuthResponse
   const response = await api.post<AuthResponse>('/auth/login', credentials);
   const { access_token, user } = response.data;
   setTokens(access_token);
-  if (user?.id) {
-    setUserId(user.id);
-  }
   return response.data;
 };
 
@@ -72,6 +69,6 @@ export const updateProfile = async (data: Partial<User>): Promise<User> => {
  * Check if user is authenticated (has valid token)
  */
 export const isAuthenticated = (): boolean => {
-  const token = localStorage.getItem('access_token');
+  const token = sessionStorage.getItem('access_token');
   return !!token;
 };

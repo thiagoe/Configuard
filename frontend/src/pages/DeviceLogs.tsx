@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, FileText, AlertTriangle, Play, Square } from "lucide-react";
 import { format } from "date-fns";
-import { getAccessToken } from "@/services/api";
+import { getAccessToken, API_BASE_URL } from "@/services/api";
 
 const DeviceLogs = () => {
   const { id } = useParams();
@@ -39,8 +39,7 @@ const DeviceLogs = () => {
       return;
     }
 
-    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
-    const url = `${baseUrl}/devices/${id}/backup/stream?token=${encodeURIComponent(token)}&log_level=${logLevel}`;
+    const url = `${API_BASE_URL}/devices/${id}/backup/stream?token=${encodeURIComponent(token)}&log_level=${logLevel}`;
 
     setStreamLogs([]);
     setStreaming(true);

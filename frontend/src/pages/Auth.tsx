@@ -81,6 +81,7 @@ const Auth = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  disabled={loading}
                   className="bg-input border-border"
                 />
               </div>
@@ -93,6 +94,7 @@ const Auth = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                  disabled={loading}
                   className="bg-input border-border"
                 />
               </div>
