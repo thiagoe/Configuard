@@ -23,7 +23,7 @@ from typing import Optional
 from fastapi import APIRouter, Query, HTTPException, status
 from sqlalchemy import func, literal
 
-from app.core.deps import CurrentUser, DbSession
+from app.core.deps import CurrentUser, DbSession, user_id_filter
 from app.core.timezone import now
 from app.models.configuration import Configuration
 from app.models.device import Device
@@ -81,21 +81,17 @@ async def search_configurations(
     ts_vector = func.to_tsvector("simple", Configuration.config_data)
 
     if regex_mode:
-        # PostgreSQL case-insensitive regex operator ~*
         rank_col = literal(0.0).label("rank")
         query = (
             db.query(Configuration, Device, rank_col)
             .join(Device, Configuration.device_id == Device.id)
-            .filter(Device.user_id == current_user.id)
             .filter(Configuration.config_data.op("~*")(term))
         )
     elif _is_partial_token(term):
-        # ILIKE fallback for partial tokens (IPs, CIDRs) — rank is always 0.0
         rank_col = literal(0.0).label("rank")
         query = (
             db.query(Configuration, Device, rank_col)
             .join(Device, Configuration.device_id == Device.id)
-            .filter(Device.user_id == current_user.id)
             .filter(Configuration.config_data.ilike(f"%{term}%"))
         )
     else:
@@ -104,9 +100,12 @@ async def search_configurations(
         query = (
             db.query(Configuration, Device, rank_col)
             .join(Device, Configuration.device_id == Device.id)
-            .filter(Device.user_id == current_user.id)
             .filter(ts_vector.op("@@")(ts_query))
         )
+
+    f = user_id_filter(Device, current_user)
+    if f is not None:
+        query = query.filter(f)
 
     # Filter by devices (multiple)
     if device_ids:

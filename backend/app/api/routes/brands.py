@@ -8,7 +8,7 @@ from math import ceil
 
 from fastapi import APIRouter, HTTPException, status, Query
 
-from app.core.deps import CurrentUser, CurrentModerator, DbSession
+from app.core.deps import CurrentUser, CurrentModerator, DbSession, user_id_filter
 from app.models.brand import Brand
 from app.schemas.brand import (
     BrandCreate,
@@ -32,7 +32,10 @@ async def list_brands(
     """
     List all brands for the current user.
     """
-    query = db.query(Brand).filter(Brand.user_id == current_user.id)
+    query = db.query(Brand)
+    f = user_id_filter(Brand, current_user)
+    if f is not None:
+        query = query.filter(f)
 
     if search:
         query = query.filter(Brand.name.ilike(f"%{search}%"))
@@ -56,7 +59,10 @@ async def list_brands_paginated(
     """
     List brands with pagination.
     """
-    query = db.query(Brand).filter(Brand.user_id == current_user.id)
+    query = db.query(Brand)
+    f = user_id_filter(Brand, current_user)
+    if f is not None:
+        query = query.filter(f)
 
     if search:
         query = query.filter(Brand.name.ilike(f"%{search}%"))
@@ -86,10 +92,11 @@ async def get_brand(
     """
     Get a specific brand by ID.
     """
-    brand = db.query(Brand).filter(
-        Brand.id == brand_id,
-        Brand.user_id == current_user.id,
-    ).first()
+    bq = db.query(Brand).filter(Brand.id == brand_id)
+    f = user_id_filter(Brand, current_user)
+    if f is not None:
+        bq = bq.filter(f)
+    brand = bq.first()
 
     if not brand:
         raise HTTPException(

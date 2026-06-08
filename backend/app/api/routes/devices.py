@@ -16,7 +16,7 @@ from queue import Queue
 from threading import Thread
 from pydantic import BaseModel
 
-from app.core.deps import CurrentUser, CurrentModerator, DbSession
+from app.core.deps import CurrentUser, CurrentModerator, DbSession, user_id_filter
 from app.core import backup_lock
 from app.models.device import Device
 from app.models.device_model import DeviceModel
@@ -70,7 +70,10 @@ async def list_devices(
         joinedload(Device.brand),
         joinedload(Device.category),
         joinedload(Device.model),
-    ).filter(Device.user_id == current_user.id)
+    )
+    f = user_id_filter(Device, current_user)
+    if f is not None:
+        query = query.filter(f)
 
     if search:
         query = query.filter(
@@ -102,7 +105,7 @@ async def list_devices_paginated(
     current_user: CurrentUser,
     db: DbSession,
     page: int = Query(1, ge=1, description="Page number"),
-    page_size: int = Query(20, ge=1, le=100, description="Items per page"),
+    page_size: int = Query(20, ge=1, le=500, description="Items per page"),
     search: Optional[str] = Query(None, description="Search by name, hostname, or IP"),
     status_filter: Optional[str] = Query(None, alias="status", description="Filter by status"),
     brand_id: Optional[str] = Query(None, description="Filter by brand"),
@@ -116,7 +119,10 @@ async def list_devices_paginated(
         joinedload(Device.brand),
         joinedload(Device.category),
         joinedload(Device.model),
-    ).filter(Device.user_id == current_user.id)
+    )
+    f = user_id_filter(Device, current_user)
+    if f is not None:
+        query = query.filter(f)
 
     if search:
         query = query.filter(
@@ -374,11 +380,15 @@ async def get_device(
     """
     Get a specific device by ID.
     """
-    device = db.query(Device).options(
+    q = db.query(Device).options(
         joinedload(Device.brand),
         joinedload(Device.category),
         joinedload(Device.model),
-    ).filter(Device.id == device_id, Device.user_id == current_user.id).first()
+    ).filter(Device.id == device_id)
+    f = user_id_filter(Device, current_user)
+    if f is not None:
+        q = q.filter(f)
+    device = q.first()
 
     if not device:
         raise HTTPException(
@@ -568,7 +578,11 @@ async def execute_device_backup(
 
     Returns the configuration (new if changes detected, or latest existing if no changes).
     """
-    device = db.query(Device).filter(Device.id == device_id, Device.user_id == current_user.id).first()
+    q = db.query(Device).filter(Device.id == device_id)
+    f = user_id_filter(Device, current_user)
+    if f is not None:
+        q = q.filter(f)
+    device = q.first()
 
     if not device:
         raise HTTPException(
@@ -652,10 +666,11 @@ async def stream_device_backup(
     user_id_header_pre = request.headers.get("X-User-Id")
     resolved_user_pre = _resolve_user_pre(db, user_id_header_pre)
 
-    device = db.query(Device).filter(
-        Device.id == device_id,
-        Device.user_id == resolved_user_pre.id,
-    ).first()
+    dq = db.query(Device).filter(Device.id == device_id)
+    f = user_id_filter(Device, resolved_user_pre)
+    if f is not None:
+        dq = dq.filter(f)
+    device = dq.first()
     if not device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -10,6 +10,7 @@ export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:80
 
 // Storage keys — sessionStorage: tokens die when the tab closes, not readable cross-tab
 const ACCESS_TOKEN_KEY = 'access_token';
+const USER_ID_KEY = 'user_id';
 
 // Custom event used by the 401 interceptor to signal AuthContext without hard redirect
 export const AUTH_EXPIRED_EVENT = 'auth:expired';
@@ -28,20 +29,24 @@ export const getAccessToken = (): string | null => {
   return sessionStorage.getItem(ACCESS_TOKEN_KEY);
 };
 
-export const setTokens = (accessToken: string): void => {
+export const setTokens = (accessToken: string, userId?: string): void => {
   sessionStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+  if (userId) sessionStorage.setItem(USER_ID_KEY, userId);
 };
 
 export const clearTokens = (): void => {
   sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  sessionStorage.removeItem(USER_ID_KEY);
 };
 
-// Request interceptor - add auth token
+// Request interceptor - add auth token and user identity
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      const userId = sessionStorage.getItem(USER_ID_KEY);
+      if (userId) config.headers['X-User-Id'] = userId;
     }
     return config;
   },

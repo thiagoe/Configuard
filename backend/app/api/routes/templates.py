@@ -8,7 +8,7 @@ from math import ceil
 
 from fastapi import APIRouter, HTTPException, status, Query
 
-from app.core.deps import CurrentUser, CurrentModerator, DbSession
+from app.core.deps import CurrentUser, CurrentModerator, DbSession, user_id_filter
 from app.models.backup_template import BackupTemplate, TemplateStep
 from app.schemas.template import (
     BackupTemplateCreate,
@@ -34,7 +34,10 @@ async def list_templates(
     """
     List all backup templates for the current user.
     """
-    query = db.query(BackupTemplate).filter(BackupTemplate.user_id == current_user.id)
+    query = db.query(BackupTemplate)
+    f = user_id_filter(BackupTemplate, current_user)
+    if f is not None:
+        query = query.filter(f)
 
     if search:
         query = query.filter(BackupTemplate.name.ilike(f"%{search}%"))
@@ -58,7 +61,10 @@ async def list_templates_paginated(
     """
     List templates with pagination.
     """
-    query = db.query(BackupTemplate).filter(BackupTemplate.user_id == current_user.id)
+    query = db.query(BackupTemplate)
+    f = user_id_filter(BackupTemplate, current_user)
+    if f is not None:
+        query = query.filter(f)
 
     if search:
         query = query.filter(BackupTemplate.name.ilike(f"%{search}%"))
@@ -90,7 +96,7 @@ async def get_template(
     """
     template = db.query(BackupTemplate).filter(
         BackupTemplate.id == template_id,
-        BackupTemplate.user_id == current_user.id,
+        *([user_id_filter(BackupTemplate, current_user)] if not current_user.is_admin else []),
     ).first()
 
     if not template:
@@ -206,7 +212,7 @@ async def update_template(
     """
     template = db.query(BackupTemplate).filter(
         BackupTemplate.id == template_id,
-        BackupTemplate.user_id == current_user.id,
+        *([user_id_filter(BackupTemplate, current_user)] if not current_user.is_admin else []),
     ).first()
 
     if not template:
@@ -338,7 +344,7 @@ async def delete_template(
     """
     template = db.query(BackupTemplate).filter(
         BackupTemplate.id == template_id,
-        BackupTemplate.user_id == current_user.id,
+        *([user_id_filter(BackupTemplate, current_user)] if not current_user.is_admin else []),
     ).first()
 
     if not template:
@@ -384,7 +390,7 @@ async def duplicate_template(
     """
     template = db.query(BackupTemplate).filter(
         BackupTemplate.id == template_id,
-        BackupTemplate.user_id == current_user.id,
+        *([user_id_filter(BackupTemplate, current_user)] if not current_user.is_admin else []),
     ).first()
 
     if not template:

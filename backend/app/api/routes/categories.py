@@ -8,7 +8,7 @@ from math import ceil
 
 from fastapi import APIRouter, HTTPException, status, Query
 
-from app.core.deps import CurrentUser, CurrentModerator, DbSession
+from app.core.deps import CurrentUser, CurrentModerator, DbSession, user_id_filter
 from app.models.category import Category
 from app.schemas.category import (
     CategoryCreate,
@@ -32,7 +32,10 @@ async def list_categories(
     """
     List all categories for the current user.
     """
-    query = db.query(Category).filter(Category.user_id == current_user.id)
+    query = db.query(Category)
+    f = user_id_filter(Category, current_user)
+    if f is not None:
+        query = query.filter(f)
 
     if search:
         query = query.filter(Category.name.ilike(f"%{search}%"))
@@ -56,7 +59,10 @@ async def list_categories_paginated(
     """
     List categories with pagination.
     """
-    query = db.query(Category).filter(Category.user_id == current_user.id)
+    query = db.query(Category)
+    f = user_id_filter(Category, current_user)
+    if f is not None:
+        query = query.filter(f)
 
     if search:
         query = query.filter(Category.name.ilike(f"%{search}%"))
@@ -86,10 +92,11 @@ async def get_category(
     """
     Get a specific category by ID.
     """
-    category = db.query(Category).filter(
-        Category.id == category_id,
-        Category.user_id == current_user.id,
-    ).first()
+    cq = db.query(Category).filter(Category.id == category_id)
+    f = user_id_filter(Category, current_user)
+    if f is not None:
+        cq = cq.filter(f)
+    category = cq.first()
 
     if not category:
         raise HTTPException(

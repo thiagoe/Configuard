@@ -8,7 +8,7 @@ from math import ceil
 
 from fastapi import APIRouter, HTTPException, status, Query
 
-from app.core.deps import CurrentUser, CurrentModerator, DbSession
+from app.core.deps import CurrentUser, CurrentModerator, DbSession, user_id_filter
 from app.models.credential import Credential
 from app.schemas.credential import (
     CredentialCreate,
@@ -33,7 +33,10 @@ async def list_credentials(
     """
     List all credentials (without sensitive data).
     """
-    query = db.query(Credential).filter(Credential.user_id == current_user.id)
+    query = db.query(Credential)
+    f = user_id_filter(Credential, current_user)
+    if f is not None:
+        query = query.filter(f)
 
     if search:
         query = query.filter(Credential.name.ilike(f"%{search}%"))
@@ -57,7 +60,10 @@ async def list_credentials_paginated(
     """
     List credentials with pagination (without sensitive data).
     """
-    query = db.query(Credential).filter(Credential.user_id == current_user.id)
+    query = db.query(Credential)
+    f = user_id_filter(Credential, current_user)
+    if f is not None:
+        query = query.filter(f)
 
     if search:
         query = query.filter(Credential.name.ilike(f"%{search}%"))
@@ -87,10 +93,11 @@ async def get_credential(
     """
     Get a specific credential by ID (without sensitive data).
     """
-    credential = db.query(Credential).filter(
-        Credential.id == credential_id,
-        Credential.user_id == current_user.id,
-    ).first()
+    cq = db.query(Credential).filter(Credential.id == credential_id)
+    f = user_id_filter(Credential, current_user)
+    if f is not None:
+        cq = cq.filter(f)
+    credential = cq.first()
 
     if not credential:
         raise HTTPException(

@@ -4,6 +4,7 @@ Authentication uses a static API token defined in .env (API_TOKEN).
 """
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import Annotated, Optional
 
 from fastapi import Depends, HTTPException, status, Request
@@ -13,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.config import settings
 from app.core.logging import get_auth_logger
+from app.core.timezone import now
 
 auth_logger = get_auth_logger()
 
@@ -30,6 +32,8 @@ class StaticUser:
     email: str = "api@system"
     full_name: Optional[str] = "API User"
     is_active: bool = True
+    created_at: datetime = field(default_factory=now)
+    updated_at: datetime = field(default_factory=now)
     _role: str = field(default="user", repr=False)
 
     @property
@@ -57,7 +61,8 @@ def _resolve_user(db: Session, user_id: Optional[str]) -> StaticUser:
         if user:
             user_role = db.query(UserRole).filter(UserRole.user_id == user.id).first()
             role = user_role.role if user_role else "user"
-            return StaticUser(id=user.id, email=user.email, full_name=user.full_name, _role=role)
+            return StaticUser(id=user.id, email=user.email, full_name=user.full_name,
+                              created_at=user.created_at, updated_at=user.updated_at, _role=role)
 
     # Fallback: first active admin
     admin = (
@@ -67,7 +72,8 @@ def _resolve_user(db: Session, user_id: Optional[str]) -> StaticUser:
         .first()
     )
     if admin:
-        return StaticUser(id=admin.id, email=admin.email, full_name=admin.full_name, _role="admin")
+        return StaticUser(id=admin.id, email=admin.email, full_name=admin.full_name,
+                          created_at=admin.created_at, updated_at=admin.updated_at, _role="admin")
     return StaticUser(_role="admin")
 
 
@@ -141,6 +147,13 @@ async def get_current_moderator(
             detail="Moderator role required",
         )
     return current_user
+
+
+def user_id_filter(model, user: "StaticUser"):
+    """Return SQLAlchemy filter for user isolation. Admins see all rows."""
+    if user.is_admin:
+        return None
+    return model.user_id == user.id
 
 
 # Type aliases for cleaner dependency injection

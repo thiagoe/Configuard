@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, status, Query
 from sqlalchemy.orm import joinedload
 from sqlalchemy import func, case
 
-from app.core.deps import CurrentUser, DbSession
+from app.core.deps import CurrentUser, DbSession, user_id_filter
 from app.models.backup_execution import BackupExecution
 from app.models.device import Device
 from app.schemas.backup_execution import (
@@ -40,7 +40,10 @@ async def list_backup_executions(
     """
     query = db.query(BackupExecution).join(Device).options(
         joinedload(BackupExecution.device)
-    ).filter(Device.user_id == current_user.id)
+    )
+    f = user_id_filter(Device, current_user)
+    if f is not None:
+        query = query.filter(f)
 
     if device_id:
         query = query.filter(BackupExecution.device_id == device_id)
@@ -90,7 +93,10 @@ async def get_backup_execution_stats(
     from datetime import timedelta
     from app.core.timezone import now
 
-    filters = [Device.user_id == current_user.id]
+    filters = []
+    f = user_id_filter(Device, current_user)
+    if f is not None:
+        filters.append(f)
     if device_id:
         filters.append(BackupExecution.device_id == device_id)
     if days:
@@ -137,12 +143,13 @@ async def get_backup_execution(
     """
     Get a specific backup execution by ID.
     """
-    execution = db.query(BackupExecution).join(Device).options(
+    q = db.query(BackupExecution).join(Device).options(
         joinedload(BackupExecution.device)
-    ).filter(
-        BackupExecution.id == execution_id,
-        Device.user_id == current_user.id,
-    ).first()
+    ).filter(BackupExecution.id == execution_id)
+    f = user_id_filter(Device, current_user)
+    if f is not None:
+        q = q.filter(f)
+    execution = q.first()
 
     if not execution:
         raise HTTPException(
@@ -165,10 +172,11 @@ async def list_device_backup_executions(
     List backup executions for a specific device.
     """
     # Verify device belongs to user
-    device = db.query(Device).filter(
-        Device.id == device_id,
-        Device.user_id == current_user.id,
-    ).first()
+    dq = db.query(Device).filter(Device.id == device_id)
+    f = user_id_filter(Device, current_user)
+    if f is not None:
+        dq = dq.filter(f)
+    device = dq.first()
 
     if not device:
         raise HTTPException(

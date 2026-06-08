@@ -141,65 +141,81 @@ const App = () => (
             <Route
               path="/templates"
               element={
-                <ProtectedLayout>
-                  <BackupTemplates />
-                </ProtectedLayout>
+                <ProtectedRoute requireModerator>
+                  <ProtectedLayout>
+                    <BackupTemplates />
+                  </ProtectedLayout>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/schedules"
               element={
-                <ProtectedLayout>
-                  <Schedules />
-                </ProtectedLayout>
+                <ProtectedRoute requireModerator>
+                  <ProtectedLayout>
+                    <Schedules />
+                  </ProtectedLayout>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/audit"
               element={
-                <ProtectedLayout>
-                  <Audit />
-                </ProtectedLayout>
+                <ProtectedRoute requireAdmin>
+                  <ProtectedLayout>
+                    <Audit />
+                  </ProtectedLayout>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/brands"
               element={
-                <ProtectedLayout>
-                  <Brands />
-                </ProtectedLayout>
+                <ProtectedRoute requireModerator>
+                  <ProtectedLayout>
+                    <Brands />
+                  </ProtectedLayout>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/categories"
               element={
-                <ProtectedLayout>
-                  <Categories />
-                </ProtectedLayout>
+                <ProtectedRoute requireModerator>
+                  <ProtectedLayout>
+                    <Categories />
+                  </ProtectedLayout>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/models"
               element={
-                <ProtectedLayout>
-                  <Models />
-                </ProtectedLayout>
+                <ProtectedRoute requireModerator>
+                  <ProtectedLayout>
+                    <Models />
+                  </ProtectedLayout>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/credentials"
               element={
-                <ProtectedLayout>
-                  <Credentials />
-                </ProtectedLayout>
+                <ProtectedRoute requireModerator>
+                  <ProtectedLayout>
+                    <Credentials />
+                  </ProtectedLayout>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/admin"
               element={
-                <ProtectedLayout>
-                  <Admin />
-                </ProtectedLayout>
+                <ProtectedRoute requireAdmin>
+                  <ProtectedLayout>
+                    <Admin />
+                  </ProtectedLayout>
+                </ProtectedRoute>
               }
             />
 

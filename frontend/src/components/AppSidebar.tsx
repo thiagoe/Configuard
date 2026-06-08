@@ -34,12 +34,14 @@ import {
 } from "@/components/ui/sidebar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const { t } = useTranslation("sidebar");
   const { t: tc } = useTranslation("common");
+  const { isAdmin, isModerator } = useAuth();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
 
@@ -107,6 +109,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {isModerator && (
         <SidebarGroup>
           <SidebarGroupLabel>{t("sections.config")}</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -161,7 +164,9 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        )}
 
+        {isAdmin && (
         <SidebarGroup>
           <SidebarGroupLabel>{t("sections.admin")}</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -179,6 +184,7 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        )}
       </SidebarContent>
     </Sidebar>
   );

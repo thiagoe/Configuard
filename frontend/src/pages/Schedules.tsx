@@ -23,7 +23,7 @@ import { format } from "date-fns";
 const Schedules = () => {
   const { isModerator } = useAuth();
   const queryClient = useQueryClient();
-  const { data: devicesData } = useDevices();
+  const { data: devicesData } = useDevices({ page_size: 500 });
   const devices = devicesData?.items ?? [];
   const { data: categories = [] } = useCategories();
   const [dialogOpen, setDialogOpen] = useState(false);

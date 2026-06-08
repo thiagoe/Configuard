@@ -8,7 +8,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, status, Query
 from sqlalchemy.orm import joinedload
 
-from app.core.deps import CurrentUser, DbSession
+from app.core.deps import CurrentUser, DbSession, user_id_filter
 from app.models.configuration import Configuration
 from app.models.device import Device
 from app.schemas.configuration import (
@@ -40,7 +40,10 @@ async def list_all_configurations(
     """
     query = db.query(Configuration).join(Device).options(
         joinedload(Configuration.device)
-    ).filter(Device.user_id == current_user.id)
+    )
+    f = user_id_filter(Device, current_user)
+    if f is not None:
+        query = query.filter(f)
 
     if device_id:
         query = query.filter(Configuration.device_id == device_id)
@@ -76,7 +79,11 @@ async def list_device_configurations(
     """
     List all configurations for a device.
     """
-    device = db.query(Device).filter(Device.id == device_id, Device.user_id == current_user.id).first()
+    dq = db.query(Device).filter(Device.id == device_id)
+    f = user_id_filter(Device, current_user)
+    if f is not None:
+        dq = dq.filter(f)
+    device = dq.first()
 
     if not device:
         raise HTTPException(
@@ -111,7 +118,11 @@ async def list_device_configurations_paginated(
     """
     List configurations for a device with pagination.
     """
-    device = db.query(Device).filter(Device.id == device_id, Device.user_id == current_user.id).first()
+    dq2 = db.query(Device).filter(Device.id == device_id)
+    f = user_id_filter(Device, current_user)
+    if f is not None:
+        dq2 = dq2.filter(f)
+    device = dq2.first()
 
     if not device:
         raise HTTPException(
@@ -145,10 +156,11 @@ async def get_configuration_detail(
     """
     Get a specific configuration, including config_data.
     """
-    config = db.query(Configuration).join(Device).filter(
-        Configuration.id == config_id,
-        Device.user_id == current_user.id,
-    ).first()
+    cq = db.query(Configuration).join(Device).filter(Configuration.id == config_id)
+    f = user_id_filter(Device, current_user)
+    if f is not None:
+        cq = cq.filter(f)
+    config = cq.first()
 
     if not config:
         raise HTTPException(
@@ -172,15 +184,16 @@ async def diff_configurations(
     """
     Compare two configuration versions and return a unified diff.
     """
-    config_a = db.query(Configuration).join(Device).filter(
-        Configuration.id == config_id,
-        Device.user_id == current_user.id,
-    ).first()
+    f = user_id_filter(Device, current_user)
+    qa = db.query(Configuration).join(Device).filter(Configuration.id == config_id)
+    if f is not None:
+        qa = qa.filter(f)
+    config_a = qa.first()
 
-    config_b = db.query(Configuration).join(Device).filter(
-        Configuration.id == config_id2,
-        Device.user_id == current_user.id,
-    ).first()
+    qb = db.query(Configuration).join(Device).filter(Configuration.id == config_id2)
+    if f is not None:
+        qb = qb.filter(f)
+    config_b = qb.first()
 
     if not config_a or not config_b:
         raise HTTPException(
