@@ -57,8 +57,10 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_users_email  ON users(email);
-CREATE INDEX IF NOT EXISTS idx_users_active ON users(is_active);
+CREATE INDEX IF NOT EXISTS idx_users_email         ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_active        ON users(is_active);
+CREATE INDEX IF NOT EXISTS idx_users_email_trgm    ON users USING GIN (email gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_users_full_name_trgm ON users USING GIN (full_name gin_trgm_ops);
 
 -- User roles table
 CREATE TABLE IF NOT EXISTS user_roles (
@@ -103,7 +105,8 @@ CREATE TABLE IF NOT EXISTS credentials (
     CONSTRAINT fk_credentials_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_credentials_user ON credentials(user_id);
+CREATE INDEX IF NOT EXISTS idx_credentials_user      ON credentials(user_id);
+CREATE INDEX IF NOT EXISTS idx_credentials_name_trgm ON credentials USING GIN (name gin_trgm_ops);
 
 -- Brands table
 CREATE TABLE IF NOT EXISTS brands (
@@ -117,7 +120,8 @@ CREATE TABLE IF NOT EXISTS brands (
     CONSTRAINT fk_brands_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_brands_user ON brands(user_id);
+CREATE INDEX IF NOT EXISTS idx_brands_user      ON brands(user_id);
+CREATE INDEX IF NOT EXISTS idx_brands_name_trgm ON brands USING GIN (name gin_trgm_ops);
 
 -- Backup templates table
 CREATE TABLE IF NOT EXISTS backup_templates (
@@ -150,7 +154,8 @@ CREATE TABLE IF NOT EXISTS backup_templates (
     CONSTRAINT fk_backup_templates_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_backup_templates_user ON backup_templates(user_id);
+CREATE INDEX IF NOT EXISTS idx_backup_templates_user      ON backup_templates(user_id);
+CREATE INDEX IF NOT EXISTS idx_backup_templates_name_trgm ON backup_templates USING GIN (name gin_trgm_ops);
 
 
 -- Template steps table
@@ -189,7 +194,8 @@ CREATE TABLE IF NOT EXISTS categories (
     CONSTRAINT fk_categories_template FOREIGN KEY (backup_template_id) REFERENCES backup_templates(id)  ON DELETE SET NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_categories_user ON categories(user_id);
+CREATE INDEX IF NOT EXISTS idx_categories_user      ON categories(user_id);
+CREATE INDEX IF NOT EXISTS idx_categories_name_trgm ON categories USING GIN (name gin_trgm_ops);
 
 -- Device models table
 CREATE TABLE IF NOT EXISTS device_models (
@@ -207,9 +213,10 @@ CREATE TABLE IF NOT EXISTS device_models (
     CONSTRAINT uk_device_models_name_user UNIQUE (user_id, name)
 );
 
-CREATE INDEX IF NOT EXISTS idx_device_models_user     ON device_models(user_id);
-CREATE INDEX IF NOT EXISTS idx_device_models_brand    ON device_models(brand_id);
-CREATE INDEX IF NOT EXISTS idx_device_models_category ON device_models(category_id);
+CREATE INDEX IF NOT EXISTS idx_device_models_user      ON device_models(user_id);
+CREATE INDEX IF NOT EXISTS idx_device_models_brand     ON device_models(brand_id);
+CREATE INDEX IF NOT EXISTS idx_device_models_category  ON device_models(category_id);
+CREATE INDEX IF NOT EXISTS idx_device_models_name_trgm ON device_models USING GIN (name gin_trgm_ops);
 
 -- Devices table
 CREATE TABLE IF NOT EXISTS devices (
@@ -255,6 +262,9 @@ CREATE INDEX IF NOT EXISTS idx_devices_category          ON devices(category_id)
 CREATE INDEX IF NOT EXISTS idx_devices_template          ON devices(backup_template_id);
 CREATE INDEX IF NOT EXISTS idx_devices_user_status       ON devices(user_id, status);
 CREATE INDEX IF NOT EXISTS idx_devices_last_backup       ON devices(last_backup_at DESC NULLS LAST);
+CREATE INDEX IF NOT EXISTS idx_devices_name_trgm         ON devices USING GIN (name gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_devices_hostname_trgm     ON devices USING GIN (hostname gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_devices_ip_trgm           ON devices USING GIN (ip_address gin_trgm_ops);
 
 -- Configurations table (backup history)
 CREATE TABLE IF NOT EXISTS configurations (
@@ -308,9 +318,10 @@ CREATE TABLE IF NOT EXISTS backup_schedules (
     CONSTRAINT fk_backup_schedules_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_backup_schedules_user     ON backup_schedules(user_id);
-CREATE INDEX IF NOT EXISTS idx_backup_schedules_active   ON backup_schedules(is_active) WHERE is_active = TRUE;
-CREATE INDEX IF NOT EXISTS idx_backup_schedules_next_run ON backup_schedules(next_run_at);
+CREATE INDEX IF NOT EXISTS idx_backup_schedules_user      ON backup_schedules(user_id);
+CREATE INDEX IF NOT EXISTS idx_backup_schedules_active    ON backup_schedules(is_active) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_backup_schedules_next_run  ON backup_schedules(next_run_at);
+CREATE INDEX IF NOT EXISTS idx_backup_schedules_name_trgm ON backup_schedules USING GIN (name gin_trgm_ops);
 
 -- Schedule devices (many-to-many)
 CREATE TABLE IF NOT EXISTS schedule_devices (
@@ -385,10 +396,11 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     CONSTRAINT fk_audit_logs_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_audit_logs_user    ON audit_logs(user_id);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_action  ON audit_logs(action);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_table   ON audit_logs(table_name);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user           ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action         ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_table          ON audit_logs(table_name);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created        ON audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action_created ON audit_logs(created_at DESC) WHERE action != 'HTTP_REQUEST';
 
 -- System settings table
 CREATE TABLE IF NOT EXISTS system_settings (

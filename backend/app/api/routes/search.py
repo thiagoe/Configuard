@@ -122,21 +122,17 @@ async def search_configurations(
         date_from = now() - timedelta(days=days)
         query = query.filter(Configuration.collected_at >= date_from)
 
-    # Filter to latest version per device using a subquery
+    # Filter to latest version per device.
+    # DISTINCT ON (device_id) ORDER BY device_id, version DESC is faster than
+    # a GROUP BY MAX subquery because it uses the existing (device_id, version) index.
     if latest_only:
         latest_subq = (
-            db.query(
-                Configuration.device_id,
-                func.max(Configuration.version).label("max_version"),
-            )
-            .group_by(Configuration.device_id)
+            db.query(Configuration.id)
+            .distinct(Configuration.device_id)
+            .order_by(Configuration.device_id, Configuration.version.desc())
             .subquery()
         )
-        query = query.join(
-            latest_subq,
-            (Configuration.device_id == latest_subq.c.device_id)
-            & (Configuration.version == latest_subq.c.max_version),
-        )
+        query = query.filter(Configuration.id.in_(latest_subq))
 
     total = query.count()
     total_pages = ceil(total / page_size) if total > 0 else 1
