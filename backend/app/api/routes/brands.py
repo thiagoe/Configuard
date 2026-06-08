@@ -32,7 +32,7 @@ async def list_brands(
     """
     List all brands for the current user.
     """
-    query = db.query(Brand)
+    query = db.query(Brand).filter(Brand.user_id == current_user.id)
 
     if search:
         query = query.filter(Brand.name.ilike(f"%{search}%"))
@@ -56,7 +56,7 @@ async def list_brands_paginated(
     """
     List brands with pagination.
     """
-    query = db.query(Brand)
+    query = db.query(Brand).filter(Brand.user_id == current_user.id)
 
     if search:
         query = query.filter(Brand.name.ilike(f"%{search}%"))
@@ -88,6 +88,7 @@ async def get_brand(
     """
     brand = db.query(Brand).filter(
         Brand.id == brand_id,
+        Brand.user_id == current_user.id,
     ).first()
 
     if not brand:

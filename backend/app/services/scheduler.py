@@ -66,30 +66,34 @@ def _run_schedule(schedule_id: str) -> None:
         schedule.last_run_at = now()
         db.commit()
 
-        # Collect all devices: direct devices + devices from categories
+        # Eager-load relationships before commit expires them, avoiding
+        # DetachedInstanceError if SQLAlchemy expires the instance after commit.
         device_ids_seen = set()
         devices_to_backup = []
 
-        # Add directly associated devices
         for device in schedule.devices:
             if device.id not in device_ids_seen:
                 device_ids_seen.add(device.id)
                 devices_to_backup.append(device)
 
-        # Add devices from associated categories
         for category in schedule.categories:
             for device in category.devices:
                 if device.id not in device_ids_seen:
                     device_ids_seen.add(device.id)
                     devices_to_backup.append(device)
 
+        schedule_name = schedule.name
+        user_id = schedule.user_id
+        n_direct = len(schedule.devices)
+        n_categories = len(schedule.categories)
+
         backup_logger.info(
             "Running scheduled backup",
             schedule_id=schedule_id,
-            schedule_name=schedule.name,
+            schedule_name=schedule_name,
             total_devices=len(devices_to_backup),
-            direct_devices=len(schedule.devices),
-            categories=len(schedule.categories),
+            direct_devices=n_direct,
+            categories=n_categories,
         )
 
         for device in devices_to_backup:
@@ -112,30 +116,38 @@ def _run_schedule(schedule_id: str) -> None:
                 )
                 continue
 
+            device_name = device.name
             try:
-                execute_backup(db, device, schedule.user_id, scheduled=True, schedule_id=schedule_id)
-                send_notification(db, "backup_success", {"device_name": device.name})
+                execute_backup(db, device, user_id, scheduled=True, schedule_id=schedule_id)
+                send_notification(db, "backup_success", {"device_name": device_name})
             except Exception as exc:
                 db.rollback()
                 backup_logger.error(
                     "Scheduled backup failed",
                     schedule_id=schedule_id,
                     device_id=device.id,
-                    device_name=device.name,
+                    device_name=device_name,
                     error=str(exc),
                 )
-                send_notification(db, "backup_failed", {
-                    "device_name": device.name,
-                    "error": str(exc),
-                })
+                # Use a fresh session for notification after rollback
+                notif_db = SessionLocal()
+                try:
+                    send_notification(notif_db, "backup_failed", {
+                        "device_name": device_name,
+                        "error": str(exc),
+                    })
+                finally:
+                    notif_db.close()
             finally:
                 backup_lock.release(device.id)
 
         # Update next_run_at from scheduler
         job = _scheduler.get_job(schedule_id) if _scheduler else None
         if job and job.next_run_time:
-            schedule.next_run_at = job.next_run_time
-            db.commit()
+            sched = db.query(BackupSchedule).filter(BackupSchedule.id == schedule_id).first()
+            if sched:
+                sched.next_run_at = job.next_run_time
+                db.commit()
     finally:
         db.close()
 

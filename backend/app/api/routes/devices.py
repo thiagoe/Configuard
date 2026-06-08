@@ -70,7 +70,7 @@ async def list_devices(
         joinedload(Device.brand),
         joinedload(Device.category),
         joinedload(Device.model),
-    )
+    ).filter(Device.user_id == current_user.id)
 
     if search:
         query = query.filter(
@@ -116,7 +116,7 @@ async def list_devices_paginated(
         joinedload(Device.brand),
         joinedload(Device.category),
         joinedload(Device.model),
-    )
+    ).filter(Device.user_id == current_user.id)
 
     if search:
         query = query.filter(
@@ -378,7 +378,7 @@ async def get_device(
         joinedload(Device.brand),
         joinedload(Device.category),
         joinedload(Device.model),
-    ).filter(Device.id == device_id).first()
+    ).filter(Device.id == device_id, Device.user_id == current_user.id).first()
 
     if not device:
         raise HTTPException(
@@ -568,7 +568,7 @@ async def execute_device_backup(
 
     Returns the configuration (new if changes detected, or latest existing if no changes).
     """
-    device = db.query(Device).filter(Device.id == device_id).first()
+    device = db.query(Device).filter(Device.id == device_id, Device.user_id == current_user.id).first()
 
     if not device:
         raise HTTPException(
@@ -647,7 +647,15 @@ async def stream_device_backup(
             detail="Invalid or missing API token",
         )
 
-    device = db.query(Device).filter(Device.id == device_id).first()
+    # Resolve caller first so ownership can be checked before acquiring the lock
+    from app.core.deps import _resolve_user as _resolve_user_pre
+    user_id_header_pre = request.headers.get("X-User-Id")
+    resolved_user_pre = _resolve_user_pre(db, user_id_header_pre)
+
+    device = db.query(Device).filter(
+        Device.id == device_id,
+        Device.user_id == resolved_user_pre.id,
+    ).first()
     if not device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -660,12 +668,7 @@ async def stream_device_backup(
             detail="Já existe um backup em execução para este dispositivo",
         )
 
-    # Resolve the real user_id from X-User-Id header (set by frontend after login)
-    # Falls back to first admin in DB if not provided or not found
-    from app.core.deps import _resolve_user
-    user_id_header = request.headers.get("X-User-Id")
-    resolved_user = _resolve_user(db, user_id_header)
-    caller_user_id = resolved_user.id
+    caller_user_id = resolved_user_pre.id
 
     queue: Queue[str | None] = Queue()
 

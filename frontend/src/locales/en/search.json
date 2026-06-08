@@ -25,5 +25,10 @@
   "latestOnlyDesc": "Search only in the most recent version of each device",
   "regexMode": "Regex",
   "regexModeDesc": "Use regular expression in search (e.g. interface GigabitEthernet\\d+)",
-  "regexError": "Invalid regex"
+  "regexError": "Invalid regex",
+  "searchError": "Search failed. Please try again.",
+  "page": "Page",
+  "of": "of",
+  "previous": "Previous",
+  "next": "Next"
 }

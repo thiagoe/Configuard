@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calendar, Plus, Edit, Trash2, FolderTree, Monitor, ChevronRight, Check, Minus } from "lucide-react";
 import { getSchedules, updateSchedule, deleteSchedule, createSchedule, Schedule, ScheduleCreate, ScheduleUpdate } from "@/services/schedules";
@@ -17,6 +18,7 @@ import { useDevices } from "@/hooks/useDevices";
 import { useCategories } from "@/hooks/useCategories";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
+import { format } from "date-fns";
 
 const Schedules = () => {
   const { isModerator } = useAuth();
@@ -26,6 +28,7 @@ const Schedules = () => {
   const { data: categories = [] } = useCategories();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Schedule | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Schedule | null>(null);
   const [formData, setFormData] = useState<ScheduleCreate>({
     name: "",
     description: "",
@@ -77,10 +80,23 @@ const Schedules = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["schedules"] }),
   });
 
+  const formatDate = (value: string | null | undefined): string => {
+    if (!value) return "-";
+    try {
+      return format(new Date(value), "dd/MM/yyyy HH:mm");
+    } catch {
+      return value;
+    }
+  };
+
   const schedulesView = useMemo(() => schedules.map((s) => ({
-    ...s, frequency: formatFrequency(s), timeLabel: formatTime(s),
-    lastRun: s.last_run_at || "-", nextRun: s.next_run_at || "-",
-  })), [schedules, t]);
+    ...s,
+    frequency: formatFrequency(s),
+    timeLabel: formatTime(s),
+    lastRun: formatDate(s.last_run_at),
+    nextRun: formatDate(s.next_run_at),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  })), [schedules]);
 
   const resetDialog = () => {
     setFocusedCategoryId(null);
@@ -152,9 +168,17 @@ const Schedules = () => {
   };
 
   const toggleCategory = (id: string) => {
-    const next = new Set(selectedCategories);
-    next.has(id) ? next.delete(id) : next.add(id);
-    setFormData({ ...formData, category_ids: Array.from(next) });
+    const nextCategories = new Set(selectedCategories);
+    if (nextCategories.has(id)) {
+      nextCategories.delete(id);
+      setFormData({ ...formData, category_ids: Array.from(nextCategories) });
+    } else {
+      nextCategories.add(id);
+      // Remove individual devices that are now covered by this category
+      const catDeviceIds = new Set(devices.filter(d => d.category_id === id).map(d => d.id));
+      const nextDevices = formData.device_ids.filter(did => !catDeviceIds.has(did));
+      setFormData({ ...formData, category_ids: Array.from(nextCategories), device_ids: nextDevices });
+    }
   };
 
   const getDeviceLabel = (id: string) => devices.find(d => d.id === id)?.name || id;
@@ -168,9 +192,10 @@ const Schedules = () => {
     return ids;
   }, [selectedCategories, devices]);
 
-  // For each category: how many of its devices are individually selected (without selecting the whole category)
+  // "all" = category checkbox checked; "full-individual" = all devices selected individually;
+  // "partial" = some devices selected individually; "none" = nothing selected
   const categoryPartialState = useMemo(() => {
-    const result: Record<string, "none" | "partial" | "all"> = {};
+    const result: Record<string, "none" | "partial" | "full-individual" | "all"> = {};
     for (const category of categories) {
       if (selectedCategories.has(category.id)) {
         result[category.id] = "all";
@@ -180,7 +205,7 @@ const Schedules = () => {
       if (catDevices.length === 0) { result[category.id] = "none"; continue; }
       const selectedCount = catDevices.filter(d => selectedDevices.has(d.id)).length;
       if (selectedCount === 0) result[category.id] = "none";
-      else if (selectedCount === catDevices.length) result[category.id] = "partial"; // all devices selected individually but not category itself
+      else if (selectedCount === catDevices.length) result[category.id] = "full-individual";
       else result[category.id] = "partial";
     }
     return result;
@@ -283,7 +308,7 @@ const Schedules = () => {
                     <TableCell>
                       {isModerator && <div className="flex gap-1">
                         <Button variant="ghost" size="sm" onClick={() => openEdit(schedule)}><Edit className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="sm" onClick={() => deleteMutation.mutate(schedule.id)}><Trash2 className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(schedule)}><Trash2 className="h-4 w-4" /></Button>
                       </div>}
                     </TableCell>
                   </TableRow>
@@ -294,6 +319,32 @@ const Schedules = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* ── Delete confirmation ── */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{tc("confirmDeleteTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("deleteConfirm", { name: deleteTarget?.name ?? "" })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteTarget) {
+                  deleteMutation.mutate(deleteTarget.id);
+                  setDeleteTarget(null);
+                }
+              }}
+            >
+              {tc("delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ── Create / Edit Dialog ── */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -488,7 +539,8 @@ const Schedules = () => {
                             const count = devices.filter(d => d.category_id === category.id).length;
                             const isChecked = selectedCategories.has(category.id);
                             const partialState = categoryPartialState[category.id] ?? "none";
-                            const isPartial = !isChecked && partialState === "partial";
+                            const isPartial = !isChecked && (partialState === "partial" || partialState === "full-individual");
+                            const isFullIndividual = !isChecked && partialState === "full-individual";
                             const isFocused = focusedCategoryId === category.id;
                             return (
                               <div
@@ -503,9 +555,11 @@ const Schedules = () => {
                                   className={`h-4 w-4 shrink-0 rounded border flex items-center justify-center cursor-pointer transition-colors ${
                                     isChecked
                                       ? "bg-primary border-primary"
-                                      : isPartial
-                                        ? "bg-primary/20 border-primary"
-                                        : "border-input bg-background"
+                                      : isFullIndividual
+                                        ? "bg-primary/40 border-primary"
+                                        : isPartial
+                                          ? "bg-primary/20 border-primary"
+                                          : "border-input bg-background"
                                   }`}
                                 >
                                   {isChecked && <Check className="h-3 w-3 text-primary-foreground" />}

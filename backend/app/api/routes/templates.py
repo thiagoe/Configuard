@@ -34,7 +34,7 @@ async def list_templates(
     """
     List all backup templates for the current user.
     """
-    query = db.query(BackupTemplate)
+    query = db.query(BackupTemplate).filter(BackupTemplate.user_id == current_user.id)
 
     if search:
         query = query.filter(BackupTemplate.name.ilike(f"%{search}%"))
@@ -58,7 +58,7 @@ async def list_templates_paginated(
     """
     List templates with pagination.
     """
-    query = db.query(BackupTemplate)
+    query = db.query(BackupTemplate).filter(BackupTemplate.user_id == current_user.id)
 
     if search:
         query = query.filter(BackupTemplate.name.ilike(f"%{search}%"))
@@ -90,6 +90,7 @@ async def get_template(
     """
     template = db.query(BackupTemplate).filter(
         BackupTemplate.id == template_id,
+        BackupTemplate.user_id == current_user.id,
     ).first()
 
     if not template:
@@ -205,6 +206,7 @@ async def update_template(
     """
     template = db.query(BackupTemplate).filter(
         BackupTemplate.id == template_id,
+        BackupTemplate.user_id == current_user.id,
     ).first()
 
     if not template:
@@ -336,6 +338,7 @@ async def delete_template(
     """
     template = db.query(BackupTemplate).filter(
         BackupTemplate.id == template_id,
+        BackupTemplate.user_id == current_user.id,
     ).first()
 
     if not template:
@@ -381,6 +384,7 @@ async def duplicate_template(
     """
     template = db.query(BackupTemplate).filter(
         BackupTemplate.id == template_id,
+        BackupTemplate.user_id == current_user.id,
     ).first()
 
     if not template:

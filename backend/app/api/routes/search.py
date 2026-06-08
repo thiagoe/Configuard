@@ -16,14 +16,15 @@ Additional modes:
 """
 
 import re
-from datetime import datetime, timedelta
+from datetime import timedelta
 from math import ceil
 from typing import Optional
 
 from fastapi import APIRouter, Query, HTTPException, status
-from sqlalchemy import func, literal, text
+from sqlalchemy import func, literal
 
 from app.core.deps import CurrentUser, DbSession
+from app.core.timezone import now
 from app.models.configuration import Configuration
 from app.models.device import Device
 from app.schemas.search import SearchResponse, SearchResult, SearchSnippet
@@ -44,12 +45,12 @@ def _is_partial_token(term: str) -> bool:
 async def search_configurations(
     current_user: CurrentUser,
     db: DbSession,
-    q: str = Query(..., min_length=2, description="Search term"),
+    q: str = Query(..., min_length=2, max_length=500, description="Search term"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
     device_ids: Optional[str] = Query(None, description="Filter by device IDs (comma-separated)"),
     category_id: Optional[str] = Query(None, description="Filter by category ID"),
-    days: Optional[int] = Query(None, description="Filter by last N days"),
+    days: Optional[int] = Query(None, ge=1, le=36500, description="Filter by last N days"),
     latest_only: bool = Query(False, description="Return only the latest version per device"),
     regex_mode: bool = Query(False, description="Use regex matching instead of full-text search"),
 ):
@@ -66,10 +67,11 @@ async def search_configurations(
             detail="Search term is required",
         )
 
-    # Validate regex if regex_mode
+    # Validate regex if regex_mode — compile once and reuse later
+    compiled_regex: re.Pattern | None = None
     if regex_mode:
         try:
-            re.compile(term)
+            compiled_regex = re.compile(term, re.IGNORECASE)
         except re.error as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -84,6 +86,7 @@ async def search_configurations(
         query = (
             db.query(Configuration, Device, rank_col)
             .join(Device, Configuration.device_id == Device.id)
+            .filter(Device.user_id == current_user.id)
             .filter(Configuration.config_data.op("~*")(term))
         )
     elif _is_partial_token(term):
@@ -92,6 +95,7 @@ async def search_configurations(
         query = (
             db.query(Configuration, Device, rank_col)
             .join(Device, Configuration.device_id == Device.id)
+            .filter(Device.user_id == current_user.id)
             .filter(Configuration.config_data.ilike(f"%{term}%"))
         )
     else:
@@ -100,6 +104,7 @@ async def search_configurations(
         query = (
             db.query(Configuration, Device, rank_col)
             .join(Device, Configuration.device_id == Device.id)
+            .filter(Device.user_id == current_user.id)
             .filter(ts_vector.op("@@")(ts_query))
         )
 
@@ -115,7 +120,7 @@ async def search_configurations(
 
     # Filter by date range
     if days:
-        date_from = datetime.utcnow() - timedelta(days=days)
+        date_from = now() - timedelta(days=days)
         query = query.filter(Configuration.collected_at >= date_from)
 
     # Filter to latest version per device using a subquery
@@ -153,22 +158,18 @@ async def search_configurations(
         config_text = config.config_data or ""
 
         if regex_mode:
-            # Count and extract matching lines using Python re
-            try:
-                pattern = re.compile(term, re.IGNORECASE)
-                matching_lines = [
-                    (idx, line)
-                    for idx, line in enumerate(config_text.splitlines(), start=1)
-                    if pattern.search(line)
-                ]
-                matches = len(matching_lines)
-                snippets = [
-                    SearchSnippet(line=idx, content=line)
-                    for idx, line in matching_lines[:3]
-                ]
-            except re.error:
-                matches = 0
-                snippets = []
+            # compiled_regex was validated and compiled above — reuse it here
+            assert compiled_regex is not None
+            matching_lines = [
+                (idx, line)
+                for idx, line in enumerate(config_text.splitlines(), start=1)
+                if compiled_regex.search(line)
+            ]
+            matches = len(matching_lines)
+            snippets = [
+                SearchSnippet(line=idx, content=line)
+                for idx, line in matching_lines[:3]
+            ]
         else:
             term_lower = term.lower()
             matches = config_text.lower().count(term_lower)

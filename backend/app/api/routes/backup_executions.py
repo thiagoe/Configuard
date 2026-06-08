@@ -40,7 +40,7 @@ async def list_backup_executions(
     """
     query = db.query(BackupExecution).join(Device).options(
         joinedload(BackupExecution.device)
-    )
+    ).filter(Device.user_id == current_user.id)
 
     if device_id:
         query = query.filter(BackupExecution.device_id == device_id)
@@ -90,7 +90,7 @@ async def get_backup_execution_stats(
     from datetime import timedelta
     from app.core.timezone import now
 
-    filters = []
+    filters = [Device.user_id == current_user.id]
     if device_id:
         filters.append(BackupExecution.device_id == device_id)
     if days:
@@ -106,7 +106,7 @@ async def get_backup_execution_stats(
             (BackupExecution.status == "success", case((BackupExecution.config_changed == True, 1), else_=0)),
             else_=0
         )).label("changed"),
-    ).filter(*filters).one()
+    ).join(Device).filter(*filters).one()
 
     total_executions = row.total or 0
     successful_executions = int(row.successful or 0)
@@ -141,6 +141,7 @@ async def get_backup_execution(
         joinedload(BackupExecution.device)
     ).filter(
         BackupExecution.id == execution_id,
+        Device.user_id == current_user.id,
     ).first()
 
     if not execution:
@@ -166,6 +167,7 @@ async def list_device_backup_executions(
     # Verify device belongs to user
     device = db.query(Device).filter(
         Device.id == device_id,
+        Device.user_id == current_user.id,
     ).first()
 
     if not device:

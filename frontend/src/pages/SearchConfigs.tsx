@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, FileText, Calendar, Loader2, ChevronsUpDown, X, Regex, History } from "lucide-react";
+import { Search, FileText, Calendar, Loader2, ChevronsUpDown, X, Regex, History, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { searchConfigurations } from "@/services/search";
 import { getCategories, Category } from "@/services/categories";
 import { useDevices } from "@/hooks/useDevices";
@@ -30,6 +30,7 @@ const SearchConfigs = () => {
   const [submittedDays, setSubmittedDays] = useState<number | undefined>();
   const [submittedLatestOnly, setSubmittedLatestOnly] = useState(false);
   const [submittedRegexMode, setSubmittedRegexMode] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [devicePopoverOpen, setDevicePopoverOpen] = useState(false);
   const navigate = useNavigate();
   const { t } = useTranslation("search");
@@ -67,6 +68,7 @@ const SearchConfigs = () => {
     setSubmittedDays(daysFilter !== "all" ? parseInt(daysFilter) : undefined);
     setSubmittedLatestOnly(latestOnly);
     setSubmittedRegexMode(regexMode);
+    setCurrentPage(1);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -87,12 +89,12 @@ const SearchConfigs = () => {
     setSelectedDevices([]);
   };
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["search-configs", submittedTerm, submittedDevices, submittedCategory, submittedDays, submittedLatestOnly, submittedRegexMode],
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["search-configs", submittedTerm, submittedDevices, submittedCategory, submittedDays, submittedLatestOnly, submittedRegexMode, currentPage],
     queryFn: () => searchConfigurations({
       q: submittedTerm,
-      page: 1,
-      page_size: 50,
+      page: currentPage,
+      page_size: 20,
       device_ids: submittedDevices.length > 0 ? submittedDevices : undefined,
       category_id: submittedCategory,
       days: submittedDays,
@@ -108,11 +110,12 @@ const SearchConfigs = () => {
     if (!highlight) return text;
     try {
       const pattern = isRegex ? highlight : highlight.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const parts = text.split(new RegExp(`(${pattern})`, "gi"));
+      const regex = new RegExp(`(${pattern})`, "gi");
+      const parts = text.split(regex);
       return (
         <span>
           {parts.map((part, i) =>
-            new RegExp(`^(${pattern})$`, "gi").test(part) ? (
+            i % 2 === 1 ? (
               <mark key={i} className="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">
                 {part}
               </mark>
@@ -349,6 +352,11 @@ const SearchConfigs = () => {
               <Loader2 className="h-3 w-3 animate-spin" />
               {t("loading")}
             </p>
+          ) : error ? (
+            <p className="text-sm text-destructive flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              {t("searchError")}
+            </p>
           ) : (
             <p className="text-sm text-muted-foreground">
               {t("results", { results: data?.total || 0, devices: deviceCount })}
@@ -384,7 +392,7 @@ const SearchConfigs = () => {
               </Card>
             ))}
           </div>
-        ) : searchResults.length === 0 ? (
+        ) : error ? null : searchResults.length === 0 ? (
           <div className="text-sm text-muted-foreground">{t("noResults")}</div>
         ) : (
           searchResults.map((result) => (
@@ -440,6 +448,33 @@ const SearchConfigs = () => {
               </CardContent>
             </Card>
           ))
+        )}
+
+        {/* Pagination */}
+        {!isLoading && !error && data && data.total_pages > 1 && (
+          <div className="flex items-center justify-center gap-2 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              {t("previous")}
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              {t("page")} {currentPage} {t("of")} {data.total_pages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.min(data.total_pages, p + 1))}
+              disabled={currentPage === data.total_pages}
+            >
+              {t("next")}
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         )}
       </div>
     </div>

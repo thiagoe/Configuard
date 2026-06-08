@@ -40,7 +40,7 @@ async def list_all_configurations(
     """
     query = db.query(Configuration).join(Device).options(
         joinedload(Configuration.device)
-    )
+    ).filter(Device.user_id == current_user.id)
 
     if device_id:
         query = query.filter(Configuration.device_id == device_id)
@@ -76,7 +76,7 @@ async def list_device_configurations(
     """
     List all configurations for a device.
     """
-    device = db.query(Device).filter(Device.id == device_id).first()
+    device = db.query(Device).filter(Device.id == device_id, Device.user_id == current_user.id).first()
 
     if not device:
         raise HTTPException(
@@ -111,7 +111,7 @@ async def list_device_configurations_paginated(
     """
     List configurations for a device with pagination.
     """
-    device = db.query(Device).filter(Device.id == device_id).first()
+    device = db.query(Device).filter(Device.id == device_id, Device.user_id == current_user.id).first()
 
     if not device:
         raise HTTPException(
@@ -145,8 +145,9 @@ async def get_configuration_detail(
     """
     Get a specific configuration, including config_data.
     """
-    config = db.query(Configuration).filter(
+    config = db.query(Configuration).join(Device).filter(
         Configuration.id == config_id,
+        Device.user_id == current_user.id,
     ).first()
 
     if not config:
@@ -171,12 +172,14 @@ async def diff_configurations(
     """
     Compare two configuration versions and return a unified diff.
     """
-    config_a = db.query(Configuration).filter(
+    config_a = db.query(Configuration).join(Device).filter(
         Configuration.id == config_id,
+        Device.user_id == current_user.id,
     ).first()
 
-    config_b = db.query(Configuration).filter(
+    config_b = db.query(Configuration).join(Device).filter(
         Configuration.id == config_id2,
+        Device.user_id == current_user.id,
     ).first()
 
     if not config_a or not config_b:

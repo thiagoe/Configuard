@@ -63,6 +63,7 @@
   "validation": {
     "selectTarget": "Selecione pelo menos uma categoria ou um dispositivo para o agendamento."
   },
+  "deleteConfirm": "Tem certeza que deseja excluir o agendamento \"{{name}}\"? Esta ação não pode ser desfeita.",
   "maintenance": {
     "title": "Janelas de Manutenção",
     "new": "Nova Janela"

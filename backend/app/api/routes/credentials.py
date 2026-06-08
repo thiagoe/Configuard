@@ -33,7 +33,7 @@ async def list_credentials(
     """
     List all credentials (without sensitive data).
     """
-    query = db.query(Credential)
+    query = db.query(Credential).filter(Credential.user_id == current_user.id)
 
     if search:
         query = query.filter(Credential.name.ilike(f"%{search}%"))
@@ -57,7 +57,7 @@ async def list_credentials_paginated(
     """
     List credentials with pagination (without sensitive data).
     """
-    query = db.query(Credential)
+    query = db.query(Credential).filter(Credential.user_id == current_user.id)
 
     if search:
         query = query.filter(Credential.name.ilike(f"%{search}%"))
@@ -89,6 +89,7 @@ async def get_credential(
     """
     credential = db.query(Credential).filter(
         Credential.id == credential_id,
+        Credential.user_id == current_user.id,
     ).first()
 
     if not credential:

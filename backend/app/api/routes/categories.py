@@ -32,7 +32,7 @@ async def list_categories(
     """
     List all categories for the current user.
     """
-    query = db.query(Category)
+    query = db.query(Category).filter(Category.user_id == current_user.id)
 
     if search:
         query = query.filter(Category.name.ilike(f"%{search}%"))
@@ -56,7 +56,7 @@ async def list_categories_paginated(
     """
     List categories with pagination.
     """
-    query = db.query(Category)
+    query = db.query(Category).filter(Category.user_id == current_user.id)
 
     if search:
         query = query.filter(Category.name.ilike(f"%{search}%"))
@@ -88,6 +88,7 @@ async def get_category(
     """
     category = db.query(Category).filter(
         Category.id == category_id,
+        Category.user_id == current_user.id,
     ).first()
 
     if not category:

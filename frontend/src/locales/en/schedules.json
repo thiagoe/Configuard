@@ -63,6 +63,7 @@
   "validation": {
     "selectTarget": "Select at least one category or device for the schedule."
   },
+  "deleteConfirm": "Are you sure you want to delete the schedule \"{{name}}\"? This action cannot be undone.",
   "maintenance": {
     "title": "Maintenance Windows",
     "new": "New Window"

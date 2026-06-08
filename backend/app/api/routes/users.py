@@ -11,7 +11,6 @@ from app.core.deps import CurrentUser, CurrentAdmin, DbSession
 from app.schemas.user import UserResponse, UserUpdate, UserUpdateAdmin, UserCreate, UserListResponse
 from app.models.user import User, UserRole
 from app.core.logging import get_api_logger, get_audit_logger
-from app.core.timezone import now
 from app.services.password import hash_password
 
 router = APIRouter()
@@ -24,16 +23,7 @@ async def get_current_user_profile(current_user: CurrentUser):
     """
     Get current user's profile.
     """
-    ts = now()
-    return UserResponse(
-        id=current_user.id,
-        email=current_user.email,
-        full_name=current_user.full_name,
-        role=current_user.role_name,
-        is_active=current_user.is_active,
-        created_at=ts,
-        updated_at=ts,
-    )
+    return UserResponse.from_user(current_user)
 
 
 @router.put("/me", response_model=UserResponse)

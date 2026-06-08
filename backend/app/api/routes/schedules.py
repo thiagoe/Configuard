@@ -82,9 +82,11 @@ async def list_schedules(
     search: Optional[str] = Query(None, description="Search by name"),
 ):
     """
-    List all schedules for the current user.
+    List schedules. Admins and moderators see all; regular users see only their own.
     """
     query = db.query(BackupSchedule)
+    if not current_user.is_moderator:
+        query = query.filter(BackupSchedule.user_id == current_user.id)
     if search:
         query = query.filter(BackupSchedule.name.ilike(f"%{search}%"))
     schedules = query.order_by(BackupSchedule.name).all()
@@ -101,9 +103,11 @@ async def list_schedules_paginated(
     search: Optional[str] = Query(None, description="Search by name"),
 ):
     """
-    List schedules with pagination.
+    List schedules with pagination. Admins and moderators see all; regular users see only their own.
     """
     query = db.query(BackupSchedule)
+    if not current_user.is_moderator:
+        query = query.filter(BackupSchedule.user_id == current_user.id)
     if search:
         query = query.filter(BackupSchedule.name.ilike(f"%{search}%"))
 
