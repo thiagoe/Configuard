@@ -237,9 +237,14 @@ class TelnetClientWrapper:
         if self.child:
             try:
                 self.child.sendline("exit")
+                self.child.expect(pexpect.EOF, timeout=2)
             except Exception:
                 pass
-            self.child.close()
+            try:
+                self.child.terminate(force=True)
+            except Exception:
+                pass
+            self.child = None
 
     def send_command(
         self,

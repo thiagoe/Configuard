@@ -484,6 +484,8 @@ class SSHClientWrapper:
                     time.sleep(0.05)
         except TimeoutError:
             self.channel.close()
+            self.channel = None
+            self.close()
             raise
 
         return buffer

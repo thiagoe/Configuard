@@ -2,7 +2,7 @@
 Credential model - Encrypted SSH/Telnet credentials
 """
 
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -26,7 +26,7 @@ class Credential(Base):
     passphrase_encrypted = Column(Text, nullable=True)
 
     # Additional settings
-    port = Column(String(5), nullable=True)  # Override default port
+    port = Column(Integer, nullable=True)
 
     created_at = Column(DateTime, default=now, nullable=False)
     updated_at = Column(DateTime, default=now, onupdate=now, nullable=False)

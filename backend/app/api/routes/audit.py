@@ -32,11 +32,6 @@ async def list_audit_logs(
     from app.models.user import User
     query = db.query(AuditLog).outerjoin(User, AuditLog.user_id == User.id).options(contains_eager(AuditLog.user))
 
-    # Exclude raw HTTP method entries logged by the old middleware
-    # Only show meaningful audit actions (CREATE, UPDATE, DELETE, LOGIN, LOGOUT, BACKUP, etc.)
-    http_methods = {"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"}
-    query = query.filter(~AuditLog.action.in_(http_methods))
-
     if action:
         query = query.filter(AuditLog.action == action)
     if table_name:

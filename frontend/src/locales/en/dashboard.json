@@ -3,21 +3,29 @@
   "subtitle": "System backup overview",
   "stats": {
     "devices": "Devices",
-    "executions": "Executions (7d)",
     "successRate": "Success Rate",
-    "failures": "Failures (7d)",
-    "schedules": "Schedules",
-    "changeRate": "Change Rate"
+    "failures": "Failures ({{period}}d)",
+    "changeRate": "Change Rate",
+    "schedules": "Active Schedules"
   },
+  "trend": "Executions per day",
   "recentExecutions": "Recent Executions",
   "loading": "Loading...",
   "noExecutions": "No recent executions",
-  "scheduled": "(scheduled)",
+  "scheduled": "scheduled",
   "changed": "Changed",
   "unchanged": "Unchanged",
   "failed": "Failed",
   "timeout": "Timeout",
+  "success": "Success",
   "alerts": "Alerts",
   "noAlerts": "No critical alerts",
-  "allBackupsOk": "All backups are running normally"
+  "allBackupsOk": "All backups are running normally",
+  "viewAll": "View all",
+  "staleDevices": "No Recent Backup",
+  "allDevicesRecent": "All devices have recent backups",
+  "neverBacked": "Never",
+  "daysAgo": "{{count}}d ago",
+  "upcomingSchedules": "Upcoming Schedules",
+  "noSchedules": "No active schedules"
 }

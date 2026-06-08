@@ -346,12 +346,7 @@ def execute_backup(
         telnet_sync_enabled=telnet_sync_options["enabled"],
     )
 
-    port = device.port
-    if credential.port:
-        try:
-            port = int(credential.port)
-        except ValueError:
-            port = device.port
+    port = credential.port or device.port
 
     outputs = []
     variables = {}

@@ -3,21 +3,29 @@
   "subtitle": "Visão geral do sistema de backup",
   "stats": {
     "devices": "Dispositivos",
-    "executions": "Execuções (7d)",
-    "successRate": "Taxa Sucesso",
-    "failures": "Falhas (7d)",
-    "schedules": "Agendamentos",
-    "changeRate": "Taxa Alteração"
+    "successRate": "Taxa de Sucesso",
+    "failures": "Falhas ({{period}}d)",
+    "changeRate": "Taxa Alteração",
+    "schedules": "Agendamentos Ativos"
   },
+  "trend": "Execuções por dia",
   "recentExecutions": "Execuções Recentes",
   "loading": "Carregando...",
   "noExecutions": "Nenhuma execução recente",
-  "scheduled": "(agendado)",
+  "scheduled": "agendado",
   "changed": "Alterado",
   "unchanged": "Sem alteração",
   "failed": "Falha",
   "timeout": "Timeout",
+  "success": "Sucesso",
   "alerts": "Alertas",
   "noAlerts": "Nenhum alerta crítico",
-  "allBackupsOk": "Todos os backups estão funcionando normalmente"
+  "allBackupsOk": "Todos os backups estão funcionando normalmente",
+  "viewAll": "Ver todos",
+  "staleDevices": "Sem Backup Recente",
+  "allDevicesRecent": "Todos os dispositivos com backup em dia",
+  "neverBacked": "Nunca",
+  "daysAgo": "{{count}}d atrás",
+  "upcomingSchedules": "Próximos Agendamentos",
+  "noSchedules": "Nenhum agendamento ativo"
 }
