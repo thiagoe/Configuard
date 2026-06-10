@@ -46,8 +46,13 @@ class Settings(BaseSettings):
     def DATABASE_URL(self) -> str:
         return f"postgresql+psycopg2://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
-    # API Token (static token for frontend-backend authentication)
+    # API Token (legacy static token — kept only for internal service comms)
     API_TOKEN: str = "change-this-to-a-secure-random-token"
+
+    # JWT (per-user authentication)
+    JWT_SECRET_KEY: str = ""
+    JWT_ALGORITHM: str = "HS256"
+    JWT_EXPIRE_MINUTES: int = 480  # access token lifetime (8h)
 
     # Encryption (for credentials)
     ENCRYPTION_KEY: str = "your-32-byte-encryption-key-here"

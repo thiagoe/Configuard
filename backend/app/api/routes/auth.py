@@ -5,8 +5,8 @@ Login validates credentials (local or LDAP) and returns the static API token.
 
 from fastapi import APIRouter, HTTPException, status, Request
 
-from app.core.config import settings
 from app.core.deps import CurrentUser, DbSession
+from app.core.security import create_access_token
 from app.schemas.auth import LoginRequest, AuthResponse, MessageResponse, UserResponse
 from app.services.auth import AuthService
 from app.services.ldap_service import LDAPService, get_ldap_config
@@ -85,7 +85,7 @@ async def login(
         if user:
             auth_logger.info("User logged in (local)", user_id=user.id, email=user.email, **client_info)
             return AuthResponse(
-                access_token=settings.API_TOKEN,
+                access_token=create_access_token(user.id, user.email, user.role_name),
                 refresh_token=None,
                 user=UserResponse.from_user(user),
             )
@@ -109,7 +109,7 @@ async def login(
             # Upsert local user record so the ID can be used for audit logging
             local_user = _upsert_ldap_user(db, ldap_user)
             return AuthResponse(
-                access_token=settings.API_TOKEN,
+                access_token=create_access_token(local_user.id, local_user.email, local_user.role_name),
                 refresh_token=None,
                 user=UserResponse.from_user(local_user),
             )
