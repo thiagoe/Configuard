@@ -49,32 +49,35 @@ class StaticUser:
         return self._role in ("admin", "moderator")
 
 
-def _resolve_user(db: Session, user_id: Optional[str]) -> StaticUser:
+def resolve_user_from_token(db: Session, token: Optional[str]) -> Optional[StaticUser]:
     """
-    Resolve the real user and their role from the database using the X-User-Id header.
-    Falls back to the first active admin if not found (e.g. LDAP users without local account).
+    Decode a per-user JWT and load the user + current role from the database.
+
+    The user id comes from the signed token's `sub` claim — never from a
+    client-supplied header. Role and is_active are re-read from the DB so that
+    deactivation / role changes take effect immediately. Returns None if the
+    token is invalid/expired or the user no longer exists or is inactive.
     """
     from app.models.user import User, UserRole
+    from app.core.security import decode_access_token
 
-    if user_id:
-        user = db.query(User).filter(User.id == user_id, User.is_active == True).first()
-        if user:
-            user_role = db.query(UserRole).filter(UserRole.user_id == user.id).first()
-            role = user_role.role if user_role else "user"
-            return StaticUser(id=user.id, email=user.email, full_name=user.full_name,
-                              created_at=user.created_at, updated_at=user.updated_at, _role=role)
+    if not token:
+        return None
 
-    # Fallback: first active admin
-    admin = (
-        db.query(User)
-        .join(UserRole, User.id == UserRole.user_id)
-        .filter(UserRole.role == "admin", User.is_active == True)
-        .first()
+    payload = decode_access_token(token)
+    if not payload:
+        return None
+
+    user = db.query(User).filter(User.id == payload["sub"], User.is_active == True).first()
+    if not user:
+        return None
+
+    user_role = db.query(UserRole).filter(UserRole.user_id == user.id).first()
+    role = user_role.role if user_role else "user"
+    return StaticUser(
+        id=user.id, email=user.email, full_name=user.full_name,
+        created_at=user.created_at, updated_at=user.updated_at, _role=role,
     )
-    if admin:
-        return StaticUser(id=admin.id, email=admin.email, full_name=admin.full_name,
-                          created_at=admin.created_at, updated_at=admin.updated_at, _role="admin")
-    return StaticUser(_role="admin")
 
 
 async def get_current_user(
@@ -83,8 +86,8 @@ async def get_current_user(
     request: Request,
 ) -> StaticUser:
     """
-    Validate the API token from the Authorization: Bearer header.
-    Uses X-User-Id header to resolve the real user identity for audit logging.
+    Authenticate via a per-user JWT in the Authorization: Bearer header.
+    Identity and role are derived from the signed token, not from any header.
     """
     if not credentials:
         raise HTTPException(
@@ -93,22 +96,18 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    token = credentials.credentials
-
-    if not settings.API_TOKEN or token != settings.API_TOKEN:
-        auth_logger.warning("Invalid API token attempt")
+    user = resolve_user_from_token(db, credentials.credentials)
+    if user is None:
+        auth_logger.warning("Invalid or expired token")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or missing API token",
+            detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    user_id_header = request.headers.get("X-User-Id")
-    static_user = _resolve_user(db, user_id_header)
-    request.state.user_id = static_user.id
-    request.state.user_email = static_user.email
-
-    return static_user
+    request.state.user_id = user.id
+    request.state.user_email = user.email
+    return user
 
 
 async def get_current_user_optional(
@@ -116,13 +115,10 @@ async def get_current_user_optional(
     db: Annotated[Session, Depends(get_db)],
     request: Request,
 ) -> Optional[StaticUser]:
-    """Returns StaticUser if token is valid, None otherwise."""
+    """Returns StaticUser if the JWT is valid, None otherwise."""
     if not credentials:
         return None
-    if credentials.credentials == settings.API_TOKEN:
-        user_id_header = request.headers.get("X-User-Id")
-        return _resolve_user(db, user_id_header)
-    return None
+    return resolve_user_from_token(db, credentials.credentials)
 
 
 async def get_current_admin(

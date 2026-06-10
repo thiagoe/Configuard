@@ -6,16 +6,18 @@ import { Button } from "@/components/ui/button";
 import {
   Activity, HardDrive, CheckCircle2, XCircle, Clock,
   AlertTriangle, RefreshCw, TrendingUp, Calendar, ChevronRight,
-  WifiOff,
+  WifiOff, GitCompare, FileText,
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 import { useDevices } from "@/hooks/useDevices";
 import { getSchedules } from "@/services/schedules";
-import { getBackupExecutions, getBackupExecutionStats } from "@/services/backupExecutions";
+import { getBackupExecutions, getBackupExecutionStats, getDailyExecutionCounts } from "@/services/backupExecutions";
+import { getConfigurations } from "@/services/configurations";
+import { getStaleDevices } from "@/services/devices";
 import { useQuery } from "@tanstack/react-query";
-import { format, parseISO, differenceInDays, subDays, startOfDay } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR, enUS } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,7 +32,15 @@ const Dashboard = () => {
 
   const [period, setPeriod] = useState<PeriodDays>(7);
 
-  const { data: devicesData } = useDevices({ page: 1, page_size: 200 });
+  // Só precisamos do total para o card de stats — paginação devolve total sem puxar 200 itens
+  const { data: devicesData } = useDevices({ page: 1, page_size: 1 });
+
+  const { data: staleDevicesData } = useQuery({
+    queryKey: ["devices-stale", period],
+    queryFn: () => getStaleDevices(period, 8),
+    staleTime: 60 * 1000,
+    refetchInterval: 60 * 1000,
+  });
 
   const { data: schedules = [] } = useQuery({
     queryKey: ["schedules"],
@@ -52,17 +62,24 @@ const Dashboard = () => {
     refetchInterval: 30 * 1000,
   });
 
-  // Fetch enough for trend chart
-  const { data: allRecentExecutions } = useQuery({
-    queryKey: ["backup-executions-trend", period],
-    queryFn: () => getBackupExecutions({ page: 1, page_size: 500 }),
+  const { data: dailyCounts } = useQuery({
+    queryKey: ["backup-executions-daily", period],
+    queryFn: () => getDailyExecutionCounts(period),
     staleTime: 60 * 1000,
     refetchInterval: 60 * 1000,
   });
 
+  // Feed de mudanças de config — toda Configuration row representa uma alteração
+  const { data: recentConfigs } = useQuery({
+    queryKey: ["configurations-recent"],
+    queryFn: () => getConfigurations({ page: 1, page_size: 8 }),
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000,
+  });
+
   const { data: failedExecutions } = useQuery({
-    queryKey: ["backup-executions-failed"],
-    queryFn: () => getBackupExecutions({ page: 1, page_size: 50, status: "failed" }),
+    queryKey: ["backup-executions-failed", period],
+    queryFn: () => getBackupExecutions({ page: 1, page_size: 50, status: "failed", days: period }),
     staleTime: 30 * 1000,
     refetchInterval: 30 * 1000,
   });
@@ -122,28 +139,7 @@ const Dashboard = () => {
   }, [devices, devicesData?.total, schedules, execStats, t, period, navigate]);
 
   // ── Trend chart data ────────────────────────────────────────────────────
-  const trendData = useMemo(() => {
-    const executions = allRecentExecutions?.items ?? [];
-    const cutoff = startOfDay(subDays(new Date(), period - 1));
-    const days: Record<string, { success: number; failed: number }> = {};
-
-    for (let i = period - 1; i >= 0; i--) {
-      const d = format(subDays(new Date(), i), "dd/MM");
-      days[d] = { success: 0, failed: 0 };
-    }
-
-    for (const exec of executions) {
-      if (!exec.started_at) continue;
-      const date = parseISO(exec.started_at);
-      if (date < cutoff) continue;
-      const key = format(date, "dd/MM");
-      if (!days[key]) continue;
-      if (exec.status === "success") days[key].success++;
-      else days[key].failed++;
-    }
-
-    return Object.entries(days).map(([date, v]) => ({ date, ...v }));
-  }, [allRecentExecutions, period]);
+  const trendData = dailyCounts?.days ?? [];
 
   // ── Recent executions ───────────────────────────────────────────────────
   const recentJobs = useMemo(() => {
@@ -162,23 +158,16 @@ const Dashboard = () => {
     }));
   }, [recentExecutions, dateFnsLocale]);
 
-  // ── Stale devices — usa last_backup_at direto do model de device ────────
-  const staleDevices = useMemo(() => {
-    return devices
-      .map((dev) => {
-        const lastBackup = dev.last_backup_at ? parseISO(dev.last_backup_at) : null;
-        const daysAgo = lastBackup ? differenceInDays(new Date(), lastBackup) : null;
-        return { id: dev.id, name: dev.name, daysAgo };
-      })
-      .filter((d) => d.daysAgo === null || d.daysAgo > 7)
-      .sort((a, b) => {
-        if (a.daysAgo === null && b.daysAgo === null) return 0;
-        if (a.daysAgo === null) return -1;
-        if (b.daysAgo === null) return 1;
-        return b.daysAgo - a.daysAgo;
-      })
-      .slice(0, 8);
-  }, [devices]);
+  // ── Stale devices — calculado no backend (sem puxar todos os devices) ───
+  const staleDevices = useMemo(
+    () =>
+      (staleDevicesData ?? []).map((d) => ({
+        id: d.id,
+        name: d.name,
+        daysAgo: d.days_ago,
+      })),
+    [staleDevicesData]
+  );
 
   // ── Alerts: grouped by device ──────────────────────────────────────────
   const groupedAlerts = useMemo(() => {
@@ -213,6 +202,21 @@ const Dashboard = () => {
         type: s.schedule_type,
       }));
   }, [schedules, dateFnsLocale]);
+
+  // ── Config change feed ─────────────────────────────────────────────────
+  const configChanges = useMemo(() => {
+    return (recentConfigs?.items ?? []).map((cfg) => ({
+      id: cfg.id,
+      deviceId: cfg.device_id,
+      device: cfg.device?.name ?? "Device",
+      version: cfg.version,
+      previousId: cfg.previous_config_id,
+      lines: cfg.lines_count,
+      when: cfg.collected_at
+        ? format(parseISO(cfg.collected_at), "dd/MM HH:mm", { locale: dateFnsLocale })
+        : "",
+    }));
+  }, [recentConfigs, dateFnsLocale]);
 
   const periodLabel = { 7: "7d", 30: "30d", 90: "90d" } as const;
 
@@ -302,6 +306,64 @@ const Dashboard = () => {
               <Area type="monotone" dataKey="failed" stroke="#ef4444" strokeWidth={2} fill="url(#gFailed)" />
             </AreaChart>
           </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Config change feed */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center justify-between text-base">
+            <span className="flex items-center gap-2">
+              <GitCompare className="h-4 w-4 text-cyan-500" />
+              {t("configChanges")}
+            </span>
+            <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => navigate("/versions")}>
+              {t("viewAll")} <ChevronRight className="h-3 w-3 ml-1" />
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {configChanges.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <FileText className="h-10 w-10 text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground">{t("noConfigChanges")}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+              {configChanges.map((cfg) => {
+                const canDiff = !!cfg.previousId;
+                const go = () =>
+                  canDiff
+                    ? navigate(`/diff?device=${cfg.deviceId}&from=${cfg.previousId}&to=${cfg.id}`)
+                    : navigate(`/devices/${cfg.deviceId}/history`);
+                return (
+                  <div
+                    key={cfg.id}
+                    className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={go}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <FileText className="h-4 w-4 shrink-0 text-cyan-500" />
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">{cfg.device}</p>
+                        <p className="text-xs text-muted-foreground">
+                          v{cfg.version} · {cfg.when}
+                          {cfg.lines != null && ` · ${cfg.lines} ${t("lines")}`}
+                        </p>
+                      </div>
+                    </div>
+                    {canDiff ? (
+                      <Badge variant="secondary" className="shrink-0 ml-2 text-xs flex items-center gap-1">
+                        <GitCompare className="h-3 w-3" /> {t("viewDiff")}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="shrink-0 ml-2 text-xs">{t("firstVersion")}</Badge>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
 

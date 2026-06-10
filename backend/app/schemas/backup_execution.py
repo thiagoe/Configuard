@@ -65,3 +65,13 @@ class BackupExecutionStatsResponse(BaseModel):
     configs_without_changes: int
     success_rate: float
     change_rate: float  # Percentage of successful backups that had changes
+
+
+class DailyExecutionCount(BaseModel):
+    date: str  # dd/MM
+    success: int
+    failed: int
+
+
+class DailyExecutionCountsResponse(BaseModel):
+    days: list[DailyExecutionCount]

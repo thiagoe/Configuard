@@ -82,3 +82,6 @@ CLAUDE.md
 # Lock files (optional — uncomment if you don't want to commit them)
 # bun.lockb
 # package-lock.json
+
+# Playwright MCP screenshots
+.playwright-mcp/

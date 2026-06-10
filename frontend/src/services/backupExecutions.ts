@@ -54,11 +54,22 @@ export interface BackupExecutionFilters {
   triggered_by?: 'manual' | 'scheduled';
   page?: number;
   page_size?: number;
+  days?: number;
 }
 
 export interface BackupExecutionStatsFilters {
   device_id?: string;
   days?: number;
+}
+
+export interface DailyExecutionCount {
+  date: string;
+  success: number;
+  failed: number;
+}
+
+export interface DailyExecutionCountsResponse {
+  days: DailyExecutionCount[];
 }
 
 // Get all backup executions (paginated)
@@ -72,6 +83,7 @@ export async function getBackupExecutions(
   if (filters?.triggered_by) params.append('triggered_by', filters.triggered_by);
   if (filters?.page) params.append('page', filters.page.toString());
   if (filters?.page_size) params.append('page_size', filters.page_size.toString());
+  if (filters?.days) params.append('days', filters.days.toString());
 
   const response = await api.get<BackupExecutionListResponse>(`/backup-executions?${params.toString()}`);
   return response.data;
@@ -86,6 +98,12 @@ export async function getBackupExecutionStats(
   if (filters?.days) params.append('days', filters.days.toString());
 
   const response = await api.get<BackupExecutionStats>(`/backup-executions/stats?${params.toString()}`);
+  return response.data;
+}
+
+// Get daily execution counts for trend chart
+export async function getDailyExecutionCounts(days: number): Promise<DailyExecutionCountsResponse> {
+  const response = await api.get<DailyExecutionCountsResponse>(`/backup-executions/daily-counts?days=${days}`);
   return response.data;
 }
 

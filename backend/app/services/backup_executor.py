@@ -14,6 +14,7 @@ from app.models.credential import Credential
 from app.models.backup_template import BackupTemplate
 from app.models.configuration import Configuration
 from app.models.backup_execution import BackupExecution
+from app.models.system_setting import SystemSetting
 from app.services.encryption import decrypt, is_encrypted
 from app.services.ssh_client import SSHClientWrapper
 from app.services.telnet_client import TelnetClientWrapper
@@ -236,6 +237,39 @@ def _get_device_template(db: Session, device: Device) -> BackupTemplate:
         raise BackupError("Backup template not found")
 
     return template
+
+
+def _get_retention_limit(db: Session, device: Device) -> int:
+    """Return max versions to keep for this device (device-specific or global default)."""
+    if device.custom_retention and device.retention_versions:
+        return device.retention_versions
+    setting = db.query(SystemSetting).filter(SystemSetting.key == "retention_versions").first()
+    try:
+        return int(setting.value) if setting and setting.value else 10
+    except (ValueError, TypeError):
+        return 10
+
+
+def _purge_old_configurations(db: Session, device: Device) -> None:
+    """Delete oldest configurations beyond the retention limit for this device."""
+    limit = _get_retention_limit(db, device)
+    all_versions = (
+        db.query(Configuration)
+        .filter(Configuration.device_id == device.id)
+        .order_by(Configuration.version.desc())
+        .all()
+    )
+    to_delete = all_versions[limit:]
+    if not to_delete:
+        return
+    ids_to_delete = [c.id for c in to_delete]
+    # Nullify previous_config_id references before deleting to avoid FK violations
+    db.query(Configuration).filter(
+        Configuration.previous_config_id.in_(ids_to_delete)
+    ).update({"previous_config_id": None}, synchronize_session=False)
+    db.query(Configuration).filter(Configuration.id.in_(ids_to_delete)).delete(
+        synchronize_session=False
+    )
 
 
 def _get_latest_config(db: Session, device_id: str) -> Optional[Configuration]:
@@ -721,6 +755,20 @@ def execute_backup(
     if configuration:
         db.refresh(configuration)
     db.refresh(execution)
+
+    # Retention purge runs AFTER the backup is committed, in its own transaction.
+    # A failure here must never roll back an already-saved backup.
+    if configuration:
+        try:
+            _purge_old_configurations(db, device)
+            db.commit()
+        except Exception as exc:
+            db.rollback()
+            backup_logger.warning(
+                "Retention purge failed (backup already saved)",
+                device_id=device.id,
+                error=str(exc),
+            )
 
     backup_logger.info(
         "Backup completed",

@@ -17,6 +17,8 @@ from app.schemas.backup_execution import (
     BackupExecutionWithDeviceResponse,
     BackupExecutionListResponse,
     BackupExecutionStatsResponse,
+    DailyExecutionCount,
+    DailyExecutionCountsResponse,
 )
 from app.core.logging import get_api_logger
 
@@ -34,6 +36,7 @@ async def list_backup_executions(
     status_filter: Optional[str] = Query(None, alias="status", description="Filter by status (success, failed, timeout)"),
     config_changed: Optional[bool] = Query(None, description="Filter by config changed"),
     triggered_by: Optional[str] = Query(None, description="Filter by trigger type (manual, scheduled)"),
+    days: Optional[int] = Query(None, ge=1, le=365, description="Only executions from the last N days"),
 ):
     """
     List all backup executions for the current user's devices.
@@ -56,6 +59,11 @@ async def list_backup_executions(
 
     if triggered_by:
         query = query.filter(BackupExecution.triggered_by == triggered_by)
+
+    if days:
+        from datetime import timedelta
+        from app.core.timezone import now
+        query = query.filter(BackupExecution.started_at >= now() - timedelta(days=days))
 
     total = query.count()
     total_pages = ceil(total / page_size) if total > 0 else 1
@@ -132,6 +140,59 @@ async def get_backup_execution_stats(
         success_rate=round(success_rate, 2),
         change_rate=round(change_rate, 2),
     )
+
+
+@router.get("/daily-counts", response_model=DailyExecutionCountsResponse)
+async def get_daily_execution_counts(
+    current_user: CurrentUser,
+    db: DbSession,
+    days: int = Query(7, ge=1, le=365, description="Number of past days to return"),
+):
+    from datetime import timedelta, date as date_type
+    from app.core.timezone import now, get_timezone
+    from app.core.config import settings
+
+    tz_name = settings.TIMEZONE
+    today = now().date()
+    cutoff = today - timedelta(days=days - 1)
+
+    # GROUP BY local date using AT TIME ZONE
+    local_date = func.date(
+        func.timezone(tz_name, BackupExecution.started_at)
+    )
+
+    f = user_id_filter(Device, current_user)
+    filters = [BackupExecution.started_at >= cutoff]
+    if f is not None:
+        filters.append(f)
+
+    rows = (
+        db.query(
+            local_date.label("day"),
+            func.sum(case((BackupExecution.status == "success", 1), else_=0)).label("success"),
+            func.sum(case((BackupExecution.status != "success", 1), else_=0)).label("failed"),
+        )
+        .join(Device)
+        .filter(*filters)
+        .group_by(local_date)
+        .all()
+    )
+
+    counts: dict[date_type, dict] = {
+        today - timedelta(days=i): {"success": 0, "failed": 0}
+        for i in range(days - 1, -1, -1)
+    }
+    for row in rows:
+        d = row.day if isinstance(row.day, date_type) else date_type.fromisoformat(str(row.day))
+        if d in counts:
+            counts[d]["success"] = int(row.success or 0)
+            counts[d]["failed"] = int(row.failed or 0)
+
+    result = [
+        DailyExecutionCount(date=d.strftime("%d/%m"), success=v["success"], failed=v["failed"])
+        for d, v in sorted(counts.items())
+    ]
+    return DailyExecutionCountsResponse(days=result)
 
 
 @router.get("/{execution_id}", response_model=BackupExecutionWithDeviceResponse)

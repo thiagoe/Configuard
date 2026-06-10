@@ -102,6 +102,18 @@ export async function getDevice(id: string): Promise<Device> {
   return response.data;
 }
 
+export interface StaleDevice {
+  id: string;
+  name: string;
+  days_ago: number | null; // null = never backed up
+}
+
+// Devices with no backup within N days (computed server-side)
+export async function getStaleDevices(days: number, limit = 8): Promise<StaleDevice[]> {
+  const response = await api.get<StaleDevice[]>(`/devices/stale?days=${days}&limit=${limit}`);
+  return response.data;
+}
+
 // Create device
 export async function createDevice(data: DeviceCreate): Promise<Device> {
   const response = await api.post<Device>('/devices', data);

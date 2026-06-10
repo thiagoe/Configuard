@@ -27,5 +27,10 @@
   "neverBacked": "Nunca",
   "daysAgo": "{{count}}d atrás",
   "upcomingSchedules": "Próximos Agendamentos",
-  "noSchedules": "Nenhum agendamento ativo"
+  "noSchedules": "Nenhum agendamento ativo",
+  "configChanges": "Últimas Alterações de Configuração",
+  "noConfigChanges": "Nenhuma alteração de configuração registrada",
+  "viewDiff": "Ver diff",
+  "firstVersion": "Versão inicial",
+  "lines": "linhas"
 }

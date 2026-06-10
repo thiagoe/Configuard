@@ -44,9 +44,8 @@ api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getAccessToken();
     if (token) {
+      // Identity now travels inside the signed JWT — no X-User-Id header.
       config.headers.Authorization = `Bearer ${token}`;
-      const userId = sessionStorage.getItem(USER_ID_KEY);
-      if (userId) config.headers['X-User-Id'] = userId;
     }
     return config;
   },
