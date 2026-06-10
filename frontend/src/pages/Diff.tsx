@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,9 +19,10 @@ const Diff = () => {
   const dateFnsLocale = i18n.language === "pt-BR" ? ptBR : enUS;
   const { data: devicesData, isLoading: devicesLoading } = useDevices();
   const devices = devicesData?.items ?? [];
-  const [selectedDevice, setSelectedDevice] = useState<string>("");
-  const [version1, setVersion1] = useState<string>("");
-  const [version2, setVersion2] = useState<string>("");
+  const [searchParams] = useSearchParams();
+  const [selectedDevice, setSelectedDevice] = useState<string>(searchParams.get("device") ?? "");
+  const [version1, setVersion1] = useState<string>(searchParams.get("from") ?? "");
+  const [version2, setVersion2] = useState<string>(searchParams.get("to") ?? "");
   const [viewMode, setViewMode] = useState("unified");
   const [showFull, setShowFull] = useState(false);
   const { data: configurations = [], isLoading: configsLoading } = useDeviceConfigurations(selectedDevice || undefined);

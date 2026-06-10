@@ -32,7 +32,6 @@ from app.schemas.device import (
 )
 from app.schemas.configuration import ConfigurationDetailResponse
 from app.services.backup_executor import execute_backup, BackupError, BackupResult
-from app.core.config import settings
 from app.core.database import SessionLocal
 from app.core.logging import get_api_logger
 from app.services.audit import log_create, log_update, log_delete, model_to_dict
@@ -371,6 +370,55 @@ async def import_devices(
     return DeviceImportResult(total=len(rows), created=created, skipped=skipped, errors=errors)
 
 
+class StaleDevice(BaseModel):
+    id: str
+    name: str
+    days_ago: Optional[int] = None  # None = never backed up
+
+
+@router.get("/stale", response_model=list[StaleDevice])
+async def list_stale_devices(
+    current_user: CurrentUser,
+    db: DbSession,
+    days: int = Query(7, ge=1, le=365, description="Stale if no backup within N days"),
+    limit: int = Query(8, ge=1, le=100, description="Max devices to return"),
+):
+    """
+    Devices with no backup within the last N days (or never).
+    Computed in SQL so the dashboard doesn't pull every device client-side.
+    """
+    from datetime import timedelta
+    from app.core.timezone import now
+
+    current = now()
+    cutoff = current - timedelta(days=days)
+
+    query = db.query(Device.id, Device.name, Device.last_backup_at)
+    f = user_id_filter(Device, current_user)
+    if f is not None:
+        query = query.filter(f)
+
+    # Never backed up, or last backup older than cutoff
+    query = query.filter(
+        (Device.last_backup_at.is_(None)) | (Device.last_backup_at < cutoff)
+    )
+    # Never (NULL) first, then oldest backups first
+    rows = query.order_by(Device.last_backup_at.asc().nullsfirst()).limit(limit).all()
+
+    result = []
+    for row in rows:
+        if row.last_backup_at is None:
+            days_ago = None
+        else:
+            last = row.last_backup_at
+            if last.tzinfo is None:
+                last = last.replace(tzinfo=current.tzinfo)
+            days_ago = (current - last).days
+        result.append(StaleDevice(id=row.id, name=row.name, days_ago=days_ago))
+
+    return result
+
+
 @router.get("/{device_id}", response_model=DeviceResponse)
 async def get_device(
     device_id: str,
@@ -655,16 +703,14 @@ async def stream_device_backup(
             detail="Not authenticated",
         )
 
-    if token != settings.API_TOKEN:
+    # Resolve caller from the JWT (query param for EventSource, or Bearer header)
+    from app.core.deps import resolve_user_from_token
+    resolved_user_pre = resolve_user_from_token(db, token)
+    if resolved_user_pre is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or missing API token",
+            detail="Invalid or expired token",
         )
-
-    # Resolve caller first so ownership can be checked before acquiring the lock
-    from app.core.deps import _resolve_user as _resolve_user_pre
-    user_id_header_pre = request.headers.get("X-User-Id")
-    resolved_user_pre = _resolve_user_pre(db, user_id_header_pre)
 
     dq = db.query(Device).filter(Device.id == device_id)
     f = user_id_filter(Device, resolved_user_pre)
