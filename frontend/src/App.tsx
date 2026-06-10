@@ -1,4 +1,4 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,25 +10,27 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { LayoutWrapper } from "@/components/LayoutWrapper";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
-import Devices from "./pages/Devices";
-import DeviceDetail from "./pages/DeviceDetail";
-import DeviceBackupHistory from "./pages/DeviceBackupHistory";
-import DeviceLogs from "./pages/DeviceLogs";
-import Backups from "./pages/Backups";
-import Versions from "./pages/Versions";
-import Diff from "./pages/Diff";
-import SearchConfigs from "./pages/SearchConfigs";
-import BackupTemplates from "./pages/BackupTemplates";
-import Schedules from "./pages/Schedules";
-import Audit from "./pages/Audit";
-import Brands from "./pages/Brands";
-import Categories from "./pages/Categories";
-import Models from "./pages/Models";
-import Credentials from "./pages/Credentials";
-import Admin from "./pages/Admin";
-import NotFound from "./pages/NotFound";
+import Auth from "./pages/Auth"; // eager: first screen, keep it instant
+
+// Route-level code splitting — each page ships in its own chunk, loaded on demand
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Devices = lazy(() => import("./pages/Devices"));
+const DeviceDetail = lazy(() => import("./pages/DeviceDetail"));
+const DeviceBackupHistory = lazy(() => import("./pages/DeviceBackupHistory"));
+const DeviceLogs = lazy(() => import("./pages/DeviceLogs"));
+const Backups = lazy(() => import("./pages/Backups"));
+const Versions = lazy(() => import("./pages/Versions"));
+const Diff = lazy(() => import("./pages/Diff"));
+const SearchConfigs = lazy(() => import("./pages/SearchConfigs"));
+const BackupTemplates = lazy(() => import("./pages/BackupTemplates"));
+const Schedules = lazy(() => import("./pages/Schedules"));
+const Audit = lazy(() => import("./pages/Audit"));
+const Brands = lazy(() => import("./pages/Brands"));
+const Categories = lazy(() => import("./pages/Categories"));
+const Models = lazy(() => import("./pages/Models"));
+const Credentials = lazy(() => import("./pages/Credentials"));
+const Admin = lazy(() => import("./pages/Admin"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,6 +63,7 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
+          <Suspense fallback={<div className="flex min-h-screen w-full items-center justify-center text-muted-foreground">Carregando…</div>}>
           <Routes>
             {/* Public route */}
             <Route path="/auth" element={<Auth />} />
@@ -222,6 +225,7 @@ const App = () => (
             {/* 404 */}
             <Route path="*" element={<NotFound />} />
             </Routes>
+          </Suspense>
           </TooltipProvider>
         </AuthProvider>
       </BrowserRouter>
