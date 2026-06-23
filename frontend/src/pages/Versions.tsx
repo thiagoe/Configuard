@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { GitBranch, GitCommit, Download, Eye, Clock, RefreshCw, AlertCircle, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR, enUS } from "date-fns/locale";
-import { getConfigurations } from "@/services/configurations";
+import { getConfigurations, getConfiguration } from "@/services/configurations";
 import { getDevices } from "@/services/devices";
 
 const Versions = () => {
@@ -53,14 +53,8 @@ const Versions = () => {
 
   const downloadConfig = async (configId: string, deviceName: string, version: number) => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000/api";
-      const response = await fetch(`${apiUrl}/configurations/${configId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-      });
-      const data = await response.json();
-      const blob = new Blob([data.config_data], { type: "text/plain" });
+      const data = await getConfiguration(configId);
+      const blob = new Blob([data.config_data || ""], { type: "text/plain" });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
