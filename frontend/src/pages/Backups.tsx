@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { ptBR, enUS } from "date-fns/locale";
 import { getBackupExecutions, BackupExecution } from "@/services/backupExecutions";
 import { getDevices } from "@/services/devices";
+import { getAccessToken, API_BASE_URL } from "@/services/api";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -119,12 +120,12 @@ const Backups = () => {
 
   const downloadConfig = async (configId: string, deviceName: string) => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-      const response = await fetch(`${apiUrl}/configurations/${configId}`, {
+      const response = await fetch(`${API_BASE_URL}/configurations/${configId}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          Authorization: `Bearer ${getAccessToken()}`,
         },
       });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
 
       const blob = new Blob([data.config_data], { type: "text/plain" });
