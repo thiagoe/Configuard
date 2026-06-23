@@ -167,7 +167,7 @@ class TelnetClientWrapper:
                 before_text = (self.child.before or "").replace("\r", "").replace("\n", "\\n")
                 after_text = (self.child.after or "").replace("\r", "").replace("\n", "\\n") if isinstance(self.child.after, str) else ""
                 on_debug(f"Telnet login prompt detected (before='{before_text[:200]}', matched='{after_text}')")
-            self.child.send(self.username + "\r\n")
+            self.child.send(self.username + "\r")
             try:
                 # Also accept prompt_pattern in case device logs in without asking for password
                 idx2 = self.child.expect([
@@ -195,7 +195,7 @@ class TelnetClientWrapper:
             if on_debug:
                 on_debug("Telnet password-only login (sem prompt de usuário)")
 
-        self.child.send(self.password + "\r\n")
+        self.child.send(self.password + "\r")
 
         compiled_prompt = re.compile(self.login_success_pattern, re.MULTILINE | re.IGNORECASE)
         try:
